@@ -9,7 +9,6 @@
 <body>
 	<script>
 		window.onload = function () {
-
 			// check to see if user has metamask addon installed on his browser. check to make sure web3 is defined
 			/*if (typeof web3 === 'undefined') {
 			document.getElementById('metamask').innerHTML = 'You need <a href="https://metamask.io/">MetaMask</a> browser plugin to run this example'
@@ -20,8 +19,8 @@
 			// call the getvalue function here
 			//getvalue();
 		}
-		//function to retrieve the last inserted value on the blockchain
 
+		//function to retrieve the last inserted value on the blockchain
 		function getvalue() {
 			try {
 				// contract Abi defines all the variables,constants and functions of the smart contract. replace with your own abi
@@ -160,68 +159,37 @@
 					var first_xname1 = xname1_str.slice(0, xname1_size - 2);
 					var second_xname1 = xname1_str.slice(xname1_size - 2, xname1_size);
 					tmp = first_xname1.concat('.' + second_xname1);
-
 					return tmp;
-
 				}
 				//call the get function of our SimpleStorage contract
 				myfunction.getOutput.call(document.getElementById("xvalue1").value, function (err, xname) {
 					var table = document.getElementById("myTable");
-
-					//var transaction = myfunction.getTransaction('0x6554874a8229abe65638202ad63d89a6783c497193edf4ae5eb1a819eba574f8');
-					//document.getElementById("demo").innerHTML = "Found " + transaction + " tr elements in the table.";
-
-
 					//duplicate row
 					//bypass metamask
 					//listen from port       
-
 					if (err) { console.log(err) }
 					if (xname) {
-
-
-
-
-
-
 						//display value on the webpage
 
 						for (var i = xname[3]; i > 0; i--) {
-
-
-
 							//console.log(xname[4][i-1]);
 							var row = table.insertRow(xname[3] - i + 1);
 							var cell1 = row.insertCell(0);
-
-
-
 							var cell2 = row.insertCell(1);
 							var cell3 = row.insertCell(2);
 							var cell4 = row.insertCell(3);
 
-
 							//cell2.innerHTML = " " + xname[0][i-1] + " °C";
 							cell2.innerHTML = " " + funcDec(xname[0][i - 1]) + " °C";
-
 
 							//cell3.innerHTML = " " + xname[1][i-1] +" kN";
 							cell3.innerHTML = " " + funcDec(xname[1][i - 1]) + " kN";
 
 							cell4.innerHTML = " " + xname[4][i - 1];
 							var converTime = funcTime(xname[2][i - 1]);
-
-
-
 							cell1.innerHTML = converTime;
-
-
-
-
 						}
 					}
-					//convert();
-
 				});
 			}
 			catch (err) {
@@ -321,11 +289,8 @@
 						"type": "function"
 					}
 				]
-
 				//ethereum.enable();
 				//contract address. please change the address to your own
-				//var contractaddress = '0x86b87C20baD15964489806F954e72f1f90229512';
-				//  var contractaddress = '0x5a028dBE4ab28C0269bc744b1c36757D4d77FeD1';
 				var contractaddress = '0x053ea17C5Ea2c2d0B482AabCD0DD0550f9f90eEC';
 				//instantiate and connect to contract address via Abi
 				var myAbi = web3.eth.contract(abi);
@@ -336,8 +301,6 @@
 						console.log("test");
 						var trans_hash = result;
 						myfunction.setHash.sendTransaction(document.getElementById("ins_ID").value, trans_hash, { from: web3.eth.accounts[0], gas: 4000000 }, function (error, result) {
-							//myfunciton.setHash.call(document.getElementById("ins_ID").value,contractaddress, function(error,result){
-
 							//npmconsole.log("i am here");
 							if (!error) {
 								console.log(result);
@@ -346,10 +309,8 @@
 								console.log(error);
 							}
 						});
-						//console.log(trans_hash);
 					}
 					else {
-						//console.log(error);
 					}
 				});
 			} catch (err) {
@@ -358,9 +319,7 @@
 				document.getElementById("ins_Temp").innerHTML = err;
 				document.getElementById("ins_Stress").innerHTML = err;
 			}
-
 		}
-
 
 		function clearrow() {
 			var table = document.getElementById("myTable");
