@@ -13,7 +13,6 @@
 			/*if (typeof web3 === 'undefined') {
 			document.getElementById('metamask').innerHTML = 'You need <a href="https://metamask.io/">MetaMask</a> browser plugin to run this example'
 			}*/
-
 			var web3 = new Web3(Web3.currentProvider || 'http://localhost:7545');
 
 			// call the getvalue function here
@@ -296,23 +295,33 @@
 				var myAbi = web3.eth.contract(abi);
 				var myfunction = myAbi.at(contractaddress);
 
-				myfunction.setInput.sendTransaction(document.getElementById("ins_ID").value, document.getElementById("ins_Temp").value, document.getElementById("ins_Stress").value, { from: web3.eth.accounts[0], gas: 4000000 }, function (error, result) {
-					if (!error) {
-						console.log("test");
-						var trans_hash = result;
-						myfunction.setHash.sendTransaction(document.getElementById("ins_ID").value, trans_hash, { from: web3.eth.accounts[0], gas: 4000000 }, function (error, result) {
-							//npmconsole.log("i am here");
-							if (!error) {
-								console.log(result);
-							}
-							else {
-								console.log(error);
-							}
-						});
+				myfunction.setInput.sendTransaction(
+					document.getElementById("ins_ID").value,
+					document.getElementById("ins_Temp").value,
+					document.getElementById("ins_Stress").value,
+					{ from: web3.eth.accounts[0], gas: 4000000 },
+					function (error, result) {
+						if (!error) {
+							console.log(result);
+							var trans_hash = result;
+							myfunction.setHash.sendTransaction(
+								document.getElementById("ins_ID").value,
+								trans_hash, { from: web3.eth.accounts[0], gas: 4000000 },
+								function (error, result) {
+									if (!error) {
+										console.log(result);
+									}
+									else {
+										console.log(error);
+									}
+								}
+							);
+						}
+						else {
+						}
 					}
-					else {
-					}
-				});
+				);
+
 			} catch (err) {
 				console.log(err);
 				document.getElementById("ins_ID").innerHTML = err;

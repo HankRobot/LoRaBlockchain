@@ -23,7 +23,6 @@
 //
 // const fs = require('fs');
 // const mnemonic = fs.readFileSync(".secret").toString().trim();
-var Web3 = require('web3');
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const fs = require('fs');
 let secrets;
