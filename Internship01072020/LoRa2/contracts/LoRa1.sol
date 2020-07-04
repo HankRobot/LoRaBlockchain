@@ -1,14 +1,13 @@
 pragma solidity ^0.5.12;
 
 contract LoRa{
-    struct  sensor{
+    struct sensor{
         uint sensorId;
         uint[] temperature;
         uint[] stress;
         uint[] time;
         uint[] index;
         uint count;
-        bytes32[] blockhash;
     }
     mapping (uint => sensor) private sensors;
 
@@ -21,15 +20,9 @@ contract LoRa{
         sensors[_sensorId].count++;
     }
 
-    function getOutput (uint _sensorId) public view returns (uint[] memory, uint[] memory, uint[] memory, uint, bytes32[] memory)
+    function getOutput (uint _sensorId) public view returns (uint[] memory, uint[] memory, uint[] memory, uint, uint[] memory)
     {
         return (sensors[_sensorId].temperature, sensors[_sensorId].stress, sensors[_sensorId].time,
-         sensors[_sensorId].count, sensors[_sensorId].blockhash);
+         sensors[_sensorId].count, sensors[_sensorId].index);
     }
-    
-    function setHash (uint _sensorId, bytes32  _hash) public
-    {
-        sensors[_sensorId].blockhash.push(_hash);
-    }
-
 }

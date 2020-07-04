@@ -20,12 +20,12 @@
 		}
 
 		//retrieves blockhash based on index retrived in simple storage
-		function getjsononindex(index) {
-			var apiUrl = 'https://api-goerli.etherscan.io/api?module=account&action=txlist&address=0x053ea17C5Ea2c2d0B482AabCD0DD0550f9f90eEC&apikey=UVDSG54FAK6KQWT9M582KQF3D45J8Z6FGW';
+		function getjson() {
+			var apiUrl = 'https://api-goerli.etherscan.io/api?module=account&action=txlist&address=0x5D95DfD337C501951442815BB70949e80ce75252&apikey=UVDSG54FAK6KQWT9M582KQF3D45J8Z6FGW';
 			var res = fetch(apiUrl).then(response => {
 				return response.json();
 			});
-			var json = res.then(function(data) {
+			var json = res.then(function (data) {
 				// Work with JSON data here
 				//console.log(data.result[index].blockHash);
 				return data;
@@ -36,8 +36,12 @@
 			return json;
 		}
 
-		function gethashwithjsaon(index,data){
+		function gethashwithjson(index, data) {
 			return data.result[index].blockHash;
+		}
+
+		function transactionlength(data) {
+			return data.result.length;
 		}
 
 		//function to retrieve the last inserted value on the blockchain
@@ -45,6 +49,36 @@
 			try {
 				// contract Abi defines all the variables,constants and functions of the smart contract. replace with your own abi
 				var abi = [
+					{
+						"constant": false,
+						"inputs": [
+							{
+								"internalType": "uint256",
+								"name": "_sensorId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "_temperature",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "_stress",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "_index",
+								"type": "uint256"
+							}
+						],
+						"name": "setInput",
+						"outputs": [],
+						"payable": false,
+						"stateMutability": "nonpayable",
+						"type": "function"
+					},
 					{
 						"constant": true,
 						"inputs": [
@@ -77,63 +111,18 @@
 								"type": "uint256"
 							},
 							{
-								"internalType": "bytes32[]",
+								"internalType": "uint256[]",
 								"name": "",
-								"type": "bytes32[]"
+								"type": "uint256[]"
 							}
 						],
 						"payable": false,
 						"stateMutability": "view",
 						"type": "function"
-					},
-					{
-						"constant": false,
-						"inputs": [
-							{
-								"internalType": "uint256",
-								"name": "_sensorId",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bytes32",
-								"name": "_hash",
-								"type": "bytes32"
-							}
-						],
-						"name": "setHash",
-						"outputs": [],
-						"payable": false,
-						"stateMutability": "nonpayable",
-						"type": "function"
-					},
-					{
-						"constant": false,
-						"inputs": [
-							{
-								"internalType": "uint256",
-								"name": "_sensorId",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "_temperature",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "_stress",
-								"type": "uint256"
-							}
-						],
-						"name": "setInput",
-						"outputs": [],
-						"payable": false,
-						"stateMutability": "nonpayable",
-						"type": "function"
 					}
 				]
 
-				var contractaddress = '0x053ea17C5Ea2c2d0B482AabCD0DD0550f9f90eEC';
+				var contractaddress = '0x5D95DfD337C501951442815BB70949e80ce75252';
 				//instantiate and connect to contract address via Abi
 				var myAbi = web3.eth.contract(abi);
 				var myfunction = myAbi.at(contractaddress);
@@ -188,15 +177,13 @@
 					//duplicate row
 					//bypass metamask
 					//listen from port       
-					let json = await getjsononindex();
-					var hash = gethashwithjsaon(27,json);
-					console.log(hash);
+					let json = await getjson();
+					console.log(transactionlength(json));
 					if (err) { console.log(err) }
 					if (xname) {
-						//display value on the webpage
+						//display value on the webpage	
 
 						for (var i = xname[3]; i > 0; i--) {
-							//console.log(xname[4][i-1]);
 							var row = table.insertRow(xname[3] - i + 1);
 							var cell1 = row.insertCell(0);
 							var cell2 = row.insertCell(1);
@@ -209,7 +196,9 @@
 							//cell3.innerHTML = " " + xname[1][i-1] +" kN";
 							cell3.innerHTML = " " + funcDec(xname[1][i - 1]) + " kN";
 
-							cell4.innerHTML = " " + xname[4][i - 1];
+							//cell4.innerHTML = " " + xname[4][i - 1];
+							cell4.innerHTML = " " + gethashwithjson(xname[4][i - 1], json);
+
 							var converTime = funcTime(xname[2][i - 1]);
 							cell1.innerHTML = converTime;
 						}
@@ -222,10 +211,40 @@
 			}
 		}
 		// function to add a new integer value to the blockchain
-		function setvalue() {
+		async function setvalue() {
 			try {
 				// contract Abi defines all the variables,constants and functions of the smart contract. replace with your own abi
 				var abi = [
+					{
+						"constant": false,
+						"inputs": [
+							{
+								"internalType": "uint256",
+								"name": "_sensorId",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "_temperature",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "_stress",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "_index",
+								"type": "uint256"
+							}
+						],
+						"name": "setInput",
+						"outputs": [],
+						"payable": false,
+						"stateMutability": "nonpayable",
+						"type": "function"
+					},
 					{
 						"constant": true,
 						"inputs": [
@@ -258,77 +277,38 @@
 								"type": "uint256"
 							},
 							{
-								"internalType": "bytes32[]",
+								"internalType": "uint256[]",
 								"name": "",
-								"type": "bytes32[]"
+								"type": "uint256[]"
 							}
 						],
 						"payable": false,
 						"stateMutability": "view",
 						"type": "function"
-					},
-					{
-						"constant": false,
-						"inputs": [
-							{
-								"internalType": "uint256",
-								"name": "_sensorId",
-								"type": "uint256"
-							},
-							{
-								"internalType": "bytes32",
-								"name": "_hash",
-								"type": "bytes32"
-							}
-						],
-						"name": "setHash",
-						"outputs": [],
-						"payable": false,
-						"stateMutability": "nonpayable",
-						"type": "function"
-					},
-					{
-						"constant": false,
-						"inputs": [
-							{
-								"internalType": "uint256",
-								"name": "_sensorId",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "_temperature",
-								"type": "uint256"
-							},
-							{
-								"internalType": "uint256",
-								"name": "_stress",
-								"type": "uint256"
-							}
-						],
-						"name": "setInput",
-						"outputs": [],
-						"payable": false,
-						"stateMutability": "nonpayable",
-						"type": "function"
 					}
 				]
-				//ethereum.enable();
+				ethereum.enable();
 				//contract address. please change the address to your own
-				var contractaddress = '0x053ea17C5Ea2c2d0B482AabCD0DD0550f9f90eEC';
+				var contractaddress = '0x5D95DfD337C501951442815BB70949e80ce75252';
 				//instantiate and connect to contract address via Abi
 				var myAbi = web3.eth.contract(abi);
 				var myfunction = myAbi.at(contractaddress);
 
+				let json = await getjson();
+				var index = transactionlength(json);
+				console.log(index);
+				
 				myfunction.setInput.sendTransaction(
 					document.getElementById("ins_ID").value,
 					document.getElementById("ins_Temp").value,
 					document.getElementById("ins_Stress").value,
+					index,
 					{ from: web3.eth.accounts[0], gas: 4000000 },
 					function (error, result) {
 						if (!error) {
 							console.log(result);
 							var trans_hash = result;
+							/*
 							myfunction.setHash.sendTransaction(
 								document.getElementById("ins_ID").value,
 								trans_hash, { from: web3.eth.accounts[0], gas: 4000000 },
@@ -341,6 +321,7 @@
 									}
 								}
 							);
+							*/
 						}
 						else {
 						}
