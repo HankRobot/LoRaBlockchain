@@ -19,6 +19,27 @@
 			//getvalue();
 		}
 
+		//retrieves blockhash based on index retrived in simple storage
+		function getjsononindex(index) {
+			var apiUrl = 'https://api-goerli.etherscan.io/api?module=account&action=txlist&address=0x053ea17C5Ea2c2d0B482AabCD0DD0550f9f90eEC&apikey=UVDSG54FAK6KQWT9M582KQF3D45J8Z6FGW';
+			var res = fetch(apiUrl).then(response => {
+				return response.json();
+			});
+			var json = res.then(function(data) {
+				// Work with JSON data here
+				//console.log(data.result[index].blockHash);
+				return data;
+			}).catch(err => {
+				// Do something for an error here	
+				console.log(err);
+			});
+			return json;
+		}
+
+		function gethashwithjsaon(index,data){
+			return data.result[index].blockHash;
+		}
+
 		//function to retrieve the last inserted value on the blockchain
 		function getvalue() {
 			try {
@@ -160,12 +181,16 @@
 					tmp = first_xname1.concat('.' + second_xname1);
 					return tmp;
 				}
+
 				//call the get function of our SimpleStorage contract
-				myfunction.getOutput.call(document.getElementById("xvalue1").value, function (err, xname) {
+				myfunction.getOutput.call(document.getElementById("xvalue1").value, async function (err, xname) {
 					var table = document.getElementById("myTable");
 					//duplicate row
 					//bypass metamask
 					//listen from port       
+					let json = await getjsononindex();
+					var hash = gethashwithjsaon(27,json);
+					console.log(hash);
 					if (err) { console.log(err) }
 					if (xname) {
 						//display value on the webpage

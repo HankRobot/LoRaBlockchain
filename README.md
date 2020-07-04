@@ -7,3 +7,5 @@ https://etherscan.io/apis#accounts
 
 
 https://api-goerli.etherscan.io/api?module=account&action=txlist&address=0x053ea17C5Ea2c2d0B482AabCD0DD0550f9f90eEC&apikey=UVDSG54FAK6KQWT9M582KQF3D45J8Z6FGW
+
+bower_components/abi-decoder/dist/abi-decoder.js"
