@@ -4,20 +4,29 @@
   "description": "",
   "scripts": {
     "prestart": "npm run compile",
-    "start": "node src/main.js",
+    "start": "node build/src/main.js",
     "compile": "tsc"
   },
   "dependencies": {
     "axios": "^0.19.2",
+    "bn.js": "^4.11.8",
     "body-parser": "^1.19.0",
     "cross-env": "^5.0.1",
     "crypto-js": "^3.1.6",
+    "crypto-random-int": "^1.0.1",
     "elliptic": "^6.4.0",
+    "ethereumjs-util": "^5.1.3",
     "express": "^4.17.1",
+    "keccak": "^1.4.0",
     "lodash": "^4.17.19",
+    "python-shell": "^2.0.1",
+    "rimraf": "^2.6.2",
+    "ring-crypto": "^1.0.8",
+    "shuffle-array": "^1.0.1",
     "ts-node": "^3.2.0",
     "typescript": "^2.4.1",
-    "ws": "^3.3.3"
+    "ws": "^3.3.3",
+    "xorshift.js": "^1.0.3"
   },
   "engines": {
     "node": ">=8.5.0"
@@ -29,6 +38,9 @@
     "@types/lodash": "^4.14.85",
     "@types/node": "^8.0.9",
     "@types/ws": "^3.0.1",
-    "tslint": "^5.5.0"
+    "tslint": "^5.5.0",
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "nodemon": "^1.14.12"
   }
 }

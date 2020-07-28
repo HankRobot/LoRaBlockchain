@@ -20,6 +20,7 @@
         </div>
       </div>
       <button v-on:click="sendTransaction" class="button-primary">Send</button>
+      <button v-on:click="generateRing" class="button-primary">Generate Ring</button>
     </form>
     <h5>Transaction pool</h5>
     <div class="transaction" v-for="tx in transactionPool">
@@ -106,6 +107,12 @@
       },
       getTransactionPool: function() {
         this.$http.get('/api/transactionPool')
+          .then((resp) => {
+            this.transactionPool = resp.data;
+          });
+      }
+      generateRing: function() {
+        this.$http.get('/api/addRingSignature')
           .then((resp) => {
             this.transactionPool = resp.data;
           });
