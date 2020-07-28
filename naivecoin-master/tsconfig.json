@@ -1,12 +1,8 @@
 {
   "compilerOptions": {
-    "outDir": "./build",
-    "allowJs": true,
-    "checkJs": false,
     "module": "commonjs",
     "target": "ES2015",
-    "sourceMap": true,
-    "moduleResolution": "node"
+    "sourceMap": true
   },
   "include": [
     "src/main.ts",
@@ -18,6 +14,6 @@
     "src/transactionPool.ts"
   ],
   "exclude": [
-    "node_modules", "build", "lib/*.js", "lib/*.jsx"
+    "node_modules"
   ]
 }

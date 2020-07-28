@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as _ from 'lodash';
 import {
     Block, generateNextBlock, generatenextBlockWithTransaction, generateRawNextBlock, getAccountBalance,
-    getBlockchain, getMyUnspentTransactionOutputs, getUnspentTxOuts, sendTransaction, ringgen
+    getBlockchain, getMyUnspentTransactionOutputs, getUnspentTxOuts, sendTransaction
 } from './blockchain';
 import {connectToPeers, getSockets, initP2PServer} from './p2p';
 import {UnspentTxOut} from './transaction';
@@ -133,8 +133,8 @@ const initHttpServer = (myHttpPort: number) => {
     });
 
     app.get('/addRingSignature', (req, res) => {
-        console.log(ringgen());
-        res.send(ringgen());
+        //console.log(ringgen());
+       // res.send(ringgen());
     });
 
     app.post('/stop', (req, res) => {
@@ -150,4 +150,4 @@ const initHttpServer = (myHttpPort: number) => {
 initHttpServer(httpPort);
 initP2PServer(p2pPort);
 initWallet();
-ringgen();
+//ringgen();
