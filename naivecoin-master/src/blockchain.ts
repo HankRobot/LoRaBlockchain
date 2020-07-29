@@ -8,6 +8,33 @@ import {addToTransactionPool, getTransactionPool, updateTransactionPool} from '.
 import {hexToBinary} from './util';
 import {createTransaction, findUnspentTxOuts, getBalance, getPrivateFromWallet, getPublicFromWallet} from './wallet';
 
+import {Hasher} from './lib/hasher';
+import {PrivateKey} from './lib/private-key';
+import {PublicKey} from './lib/public-key';
+import {Prng} from './lib/prng';
+import {Signature} from './lib/signature';
+
+const ringgen = () => {
+    const prng = new Prng();
+    const hasher = new Hasher();
+    const key = new PrivateKey(prng.random,hasher);
+    //create private keys and their corresponding public keys
+    const foreign_keys = [new PrivateKey(prng.random,hasher).public_key,
+                          new PrivateKey(prng.random,hasher).public_key,
+                          new PrivateKey(prng.random,hasher).public_key];
+
+    //message to sign
+    const msg = 'one ring to rule them all';
+    //create ring signature by signing with the private key
+    const signature = key.sign(msg,foreign_keys);
+    //get the public keys from the signature 
+    const public_keys = signature.public_keys;
+    //verify signature using msg and public keys
+    console.log(signature.verify(msg,public_keys));
+}
+
+
+
 class Block {
     public index: number;
     public hash: string;
@@ -294,5 +321,5 @@ export {
     Block, getBlockchain, getUnspentTxOuts, getLatestBlock, sendTransaction,
     generateRawNextBlock, generateNextBlock, generatenextBlockWithTransaction,
     handleReceivedTransaction, getMyUnspentTransactionOutputs,
-    getAccountBalance, isValidBlockStructure, replaceChain, addBlockToChain
+    getAccountBalance, isValidBlockStructure, replaceChain, addBlockToChain, ringgen
 };
