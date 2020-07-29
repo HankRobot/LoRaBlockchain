@@ -31,9 +31,8 @@ const ringgen = () => {
     const public_keys = signature.public_keys;
     //verify signature using msg and public keys
     console.log(signature.verify(msg,public_keys));
+    return (signature.verify(msg,public_keys));
 }
-
-
 
 class Block {
     public index: number;

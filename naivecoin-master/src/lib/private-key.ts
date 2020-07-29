@@ -2,11 +2,12 @@ import {PublicKey} from './public-key';
 import {Signature} from './signature';
 import * as BN from 'bn.js';
 import * as shuffle from 'shuffle-array';
+import { Hasher } from './hasher';
 
 class PrivateKey{
   private value:BN;
-  private hasher:any;
-  public public_key:any;
+  private hasher:Hasher;
+  public public_key:PublicKey;
   private key_image:any;
   
   constructor(value,hasher){

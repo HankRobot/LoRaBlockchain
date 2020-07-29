@@ -2,7 +2,7 @@ import {XorShift128Plus} from 'xorshift.js';
 import * as crypto from 'crypto';
 
 class Prng{
-  private seed:any;
+  private seed:string;
   private prng:XorShift128Plus;
   constructor(){
     this.seed = crypto.randomBytes(16).toString('hex');

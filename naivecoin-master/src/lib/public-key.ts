@@ -1,7 +1,7 @@
 import BN from 'bn.js';
 
 class PublicKey{
-  private point:any;
+  public point:any;
   private hasher:any;
   
   constructor(point,hasher){
