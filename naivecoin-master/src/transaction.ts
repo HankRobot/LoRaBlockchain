@@ -1,10 +1,17 @@
 import * as CryptoJS from 'crypto-js';
 import * as ecdsa from 'elliptic';
 import * as _ from 'lodash';
-
 const ec = new ecdsa.ec('secp256k1');
 
 const COINBASE_AMOUNT: number = 50;
+
+import {Hasher} from './lib/hasher';
+import {PrivateKey} from './lib/private-key';
+import {PublicKey} from './lib/public-key';
+import {Prng} from './lib/prng';
+import {Signature} from './lib/signature';
+import { //getPublicFromWallet, getPrivateFromWallet, 
+    getRingPrivateFromWallet, getRingPublicFromWallet} from './wallet';
 
 class UnspentTxOut {
     public readonly txOutId: string;
@@ -23,7 +30,8 @@ class UnspentTxOut {
 class TxIn {
     public txOutId: string;
     public txOutIndex: number;
-    public signature: string;
+    public signature: Signature;
+    public signaturestring: string;
 }
 
 class TxOut {
@@ -37,7 +45,6 @@ class TxOut {
 }
 
 class Transaction {
-
     public id: string;
 
     public txIns: TxIn[];
@@ -166,8 +173,16 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
     }
     const address = referencedUTxOut.address;
 
-    const key = ec.keyFromPublic(address, 'hex');
-    const validSignature: boolean = key.verify(transaction.id, txIn.signature);
+    const hasher = new Hasher();
+    const key = new PrivateKey(getRingPrivateFromWallet()[0],hasher);
+    const foreign_keys = getRingPublicFromWallet();
+    const signature = key.sign(transaction.id,foreign_keys);
+    const validSignature: boolean = signature.verify(transaction.id,signature.public_keys)// && signature.getc_summation() == txIn.signaturestring ;
+
+    //const key = ec.keyFromPublic(address, 'hex');
+    //const validSignature: boolean = key.verify(transaction.id, txIn.signature);
+    //const validSignature: boolean = true;//txIn.signature.verify(transaction.id,txIn.signature.public_keys);
+    txIn.signature = null;
     if (!validSignature) {
         console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUTxOut.address);
         return false;
@@ -186,7 +201,8 @@ const findUnspentTxOut = (transactionId: string, index: number, aUnspentTxOuts: 
 const getCoinbaseTransaction = (address: string, blockIndex: number): Transaction => {
     const t = new Transaction();
     const txIn: TxIn = new TxIn();
-    txIn.signature = '';
+    txIn.signaturestring = '';
+    txIn.signature = null;
     txIn.txOutId = '';
     txIn.txOutIndex = blockIndex;
 
@@ -197,7 +213,7 @@ const getCoinbaseTransaction = (address: string, blockIndex: number): Transactio
 };
 
 const signTxIn = (transaction: Transaction, txInIndex: number,
-                  privateKey: string, aUnspentTxOuts: UnspentTxOut[]): string => {
+                  privateKey: string, aUnspentTxOuts: UnspentTxOut[]): Signature => {
     const txIn: TxIn = transaction.txIns[txInIndex];
 
     const dataToSign = transaction.id;
@@ -213,8 +229,16 @@ const signTxIn = (transaction: Transaction, txInIndex: number,
             ' key that does not match the address that is referenced in txIn');
         throw Error();
     }
-    const key = ec.keyFromPrivate(privateKey, 'hex');
-    const signature: string = toHexString(key.sign(dataToSign).toDER());
+    //const key = ec.keyFromPrivate(privateKey, 'hex');
+    const hasher = new Hasher();
+    const key = new PrivateKey(getRingPrivateFromWallet()[0],hasher);
+    //create private keys and their corresponding public keys
+    const foreign_keys = getRingPublicFromWallet();
+                          
+    //create ring signature by signing with the private key
+    const signature = key.sign(dataToSign,foreign_keys);
+    
+    //const signature: string = toHexString(key.sign(dataToSign).toDER());
 
     return signature;
 };
@@ -261,10 +285,13 @@ const isValidTxInStructure = (txIn: TxIn): boolean => {
     if (txIn == null) {
         console.log('txIn is null');
         return false;
-    } else if (typeof txIn.signature !== 'string') {
-        console.log('invalid signature type in txIn');
+    } else if (typeof txIn.signaturestring !== 'string') {
+        console.log('1 invalid signature type in txIn');
         return false;
-    } else if (typeof txIn.txOutId !== 'string') {
+    }/*else if (typeof txIn.signature !== null) {
+        console.log('2 invalid signature type in txIn');
+        return false; 
+    }*/else if (typeof txIn.txOutId !== 'string') {
         console.log('invalid txOutId type in txIn');
         return false;
     } else if (typeof  txIn.txOutIndex !== 'number') {

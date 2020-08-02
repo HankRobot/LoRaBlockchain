@@ -3,9 +3,49 @@ import {existsSync, readFileSync, unlinkSync, writeFileSync} from 'fs';
 import * as _ from 'lodash';
 import {getPublicKey, getTransactionId, signTxIn, Transaction, TxIn, TxOut, UnspentTxOut} from './transaction';
 
+import {Hasher} from './lib/hasher';
+import {PrivateKey} from './lib/private-key';
+import {PublicKey} from './lib/public-key';
+import {Prng} from './lib/prng';
+import {Signature} from './lib/signature';
+
 const EC = new ec('secp256k1');
 const privateKeyLocation = process.env.PRIVATE_KEY || 'node/wallet/private_key';
+const privateKeyLocation1 = process.env.PRIVATE_KEY || 'node/wallet/private_key1';
+const privateKeyLocation2 = process.env.PRIVATE_KEY || 'node/wallet/private_key2';
+const privateKeyLocation3 = process.env.PRIVATE_KEY || 'node/wallet/private_key3';
+const privateKeyLocation4 = process.env.PRIVATE_KEY || 'node/wallet/private_key4';
 
+//All ring keys are written here
+const getRingPrivateFromWallet = (): string[] => {
+    const buffer = [readFileSync(privateKeyLocation1, 'utf8'),
+                    readFileSync(privateKeyLocation2, 'utf8'),
+                    readFileSync(privateKeyLocation3, 'utf8'),
+                    readFileSync(privateKeyLocation4, 'utf8')];
+    return buffer;
+};
+
+const getRingPublicFromWallet = (): PublicKey[] => {
+    const privateKey = getRingPrivateFromWallet();
+    const hasher = new Hasher();
+    const foreign_keys = [new PrivateKey(privateKey[1],hasher).public_key,
+                          new PrivateKey(privateKey[2],hasher).public_key,
+                          new PrivateKey(privateKey[3],hasher).public_key];
+    //const key = EC.keyFromPrivate(privateKey, 'hex');
+    //return key.getPublic().encode('hex');
+    return foreign_keys;
+};
+
+const generateRingPrivateKey = (): PrivateKey => {
+    //const keyPair = EC.genKeyPair();
+    //const privateKey = keyPair.getPrivate();
+    const privateKey = getRingPrivateFromWallet();
+    const hasher = new Hasher();
+    const key = new PrivateKey(privateKey,hasher);
+    return key;
+};
+ 
+//Normal keys
 const getPrivateFromWallet = (): string => {
     const buffer = readFileSync(privateKeyLocation, 'utf8');
     return buffer.toString();
@@ -28,6 +68,7 @@ const initWallet = () => {
     if (existsSync(privateKeyLocation)) {
         return;
     }
+    
     const newPrivateKey = generatePrivateKey();
 
     writeFileSync(privateKeyLocation, newPrivateKey);
@@ -126,6 +167,7 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
 
     tx.txIns = tx.txIns.map((txIn: TxIn, index: number) => {
         txIn.signature = signTxIn(tx, index, privateKey, unspentTxOuts);
+        txIn.signaturestring = txIn.signature.getc_summation();
         return txIn;
     });
 
@@ -133,4 +175,5 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
 };
 
 export {createTransaction, getPublicFromWallet,
-    getPrivateFromWallet, getBalance, generatePrivateKey, initWallet, deleteWallet, findUnspentTxOuts};
+    getPrivateFromWallet, getBalance, generatePrivateKey, initWallet, deleteWallet, findUnspentTxOuts,
+    getRingPrivateFromWallet,getRingPublicFromWallet, generateRingPrivateKey};

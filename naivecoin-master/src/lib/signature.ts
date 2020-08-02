@@ -12,7 +12,14 @@ class Signature{
     this.c_array = c_array;
     this.r_array = r_array;
     this.hasher = hasher;
-    this.public_keys = public_keys
+    this.public_keys = public_keys;
+  }
+
+  getc_summation(): string{
+    console.log("c: summation test");
+    const test = this.c_summation(this.c_array,this.hasher).umod(this.hasher.l).toString('hex');
+    console.log(test);
+    return test;
   }
 
   verify(message,public_keys){

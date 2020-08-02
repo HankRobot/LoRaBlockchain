@@ -13,7 +13,7 @@ export default class PrivateKey{
 
   get point(){
     return this.public_key.point;
-  }
+  }    
 
   sign(message,foreign_keys){
     const message_digest = this.hasher.hash_string(message);

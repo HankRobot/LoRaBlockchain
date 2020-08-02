@@ -9,6 +9,13 @@ export default class Signature{
     this.public_keys = public_keys
   }
 
+  getc_summation() {
+    console.log("c: summation test");
+    const test = this.c_summation(this.c_array,this.hasher).umod(this.hasher.l).toString('hex');
+    console.log(test);
+    return test;
+  }
+
   verify(message,public_keys){
     let ll_array = [];
     let rr_array = [];

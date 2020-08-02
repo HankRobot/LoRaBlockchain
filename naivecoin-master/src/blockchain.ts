@@ -6,33 +6,15 @@ import {
 } from './transaction';
 import {addToTransactionPool, getTransactionPool, updateTransactionPool} from './transactionPool';
 import {hexToBinary} from './util';
-import {createTransaction, findUnspentTxOuts, getBalance, getPrivateFromWallet, getPublicFromWallet} from './wallet';
+import {createTransaction, findUnspentTxOuts, getBalance
+    , getPrivateFromWallet, getPublicFromWallet
+    } from './wallet';
 
 import {Hasher} from './lib/hasher';
 import {PrivateKey} from './lib/private-key';
 import {PublicKey} from './lib/public-key';
 import {Prng} from './lib/prng';
 import {Signature} from './lib/signature';
-
-const ringgen = () => {
-    const prng = new Prng();
-    const hasher = new Hasher();
-    const key = new PrivateKey(prng.random,hasher);
-    //create private keys and their corresponding public keys
-    const foreign_keys = [new PrivateKey(prng.random,hasher).public_key,
-                          new PrivateKey(prng.random,hasher).public_key,
-                          new PrivateKey(prng.random,hasher).public_key];
-
-    //message to sign
-    const msg = 'one ring to rule them all';
-    //create ring signature by signing with the private key
-    const signature = key.sign(msg,foreign_keys);
-    //get the public keys from the signature 
-    const public_keys = signature.public_keys;
-    //verify signature using msg and public keys
-    console.log(signature.verify(msg,public_keys));
-    return (signature.verify(msg,public_keys));
-}
 
 class Block {
     public index: number;
@@ -56,7 +38,7 @@ class Block {
 }
 
 const genesisTransaction = {
-    'txIns': [{'signature': '', 'txOutId': '', 'txOutIndex': 0}],
+    'txIns': [{'signaturestring': '', 'signature': null, 'txOutId': '', 'txOutIndex': 0}],
     'txOuts': [{
         'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
         'amount': 50
@@ -320,5 +302,5 @@ export {
     Block, getBlockchain, getUnspentTxOuts, getLatestBlock, sendTransaction,
     generateRawNextBlock, generateNextBlock, generatenextBlockWithTransaction,
     handleReceivedTransaction, getMyUnspentTransactionOutputs,
-    getAccountBalance, isValidBlockStructure, replaceChain, addBlockToChain, ringgen
-};
+    getAccountBalance, isValidBlockStructure, replaceChain, addBlockToChain
+    }

@@ -8,7 +8,7 @@ class PrivateKey{
   private value:BN;
   private hasher:Hasher;
   public public_key:PublicKey;
-  private key_image:any;
+  public key_image:any;
   
   constructor(value,hasher){
     this.value = new BN(value.toString(),16);
