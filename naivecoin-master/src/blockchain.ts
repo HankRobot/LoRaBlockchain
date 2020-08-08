@@ -2,19 +2,13 @@ import * as CryptoJS from 'crypto-js';
 import * as _ from 'lodash';
 import {broadcastLatest, broadCastTransactionPool} from './p2p';
 import {
-    getCoinbaseTransaction, isValidAddress, processTransactions, Transaction, UnspentTxOut
+    getCoinbaseTransaction, isValidAddress, processTransactions, Transaction, UnspentTxOut, safeStringify
 } from './transaction';
 import {addToTransactionPool, getTransactionPool, updateTransactionPool} from './transactionPool';
 import {hexToBinary} from './util';
 import {createTransaction, findUnspentTxOuts, getBalance
     , getPrivateFromWallet, getPublicFromWallet
     } from './wallet';
-
-import {Hasher} from './lib/hasher';
-import {PrivateKey} from './lib/private-key';
-import {PublicKey} from './lib/public-key';
-import {Prng} from './lib/prng';
-import {Signature} from './lib/signature';
 
 class Block {
     public index: number;
@@ -154,7 +148,9 @@ const getAccountBalance = (): number => {
 const sendTransaction = (address: string, amount: number): Transaction => {
     const tx: Transaction = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
     addToTransactionPool(tx, getUnspentTxOuts());
+    console.log("Pass");
     broadCastTransactionPool();
+    console.log("Done")
     return tx;
 };
 
@@ -175,7 +171,7 @@ const isValidBlockStructure = (block: Block): boolean => {
 
 const isValidNewBlock = (newBlock: Block, previousBlock: Block): boolean => {
     if (!isValidBlockStructure(newBlock)) {
-        console.log('invalid block structure: %s', JSON.stringify(newBlock));
+        console.log('invalid block structure: %s', safeStringify(newBlock));
         return false;
     }
     if (previousBlock.index + 1 !== newBlock.index) {
@@ -234,9 +230,9 @@ const hashMatchesDifficulty = (hash: string, difficulty: number): boolean => {
  */
 const isValidChain = (blockchainToValidate: Block[]): UnspentTxOut[] => {
     console.log('isValidChain:');
-    console.log(JSON.stringify(blockchainToValidate));
+    console.log(safeStringify(blockchainToValidate));
     const isValidGenesis = (block: Block): boolean => {
-        return JSON.stringify(block) === JSON.stringify(genesisBlock);
+        return safeStringify(block) === safeStringify(genesisBlock);
     };
 
     if (!isValidGenesis(blockchainToValidate[0])) {

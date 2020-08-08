@@ -1,0 +1,177 @@
+* {
+    box-sizing: border-box;
+    }
+     
+*:focus {
+    outline: none;
+    }
+
+body {
+    font-family: Arial;
+    background-color: rgb(107, 99, 106);
+    }
+
+#top {  
+        width: 100%;
+        height: 12%;
+        text-align: center;
+        color: #777;
+        margin-top: 1%;
+        }
+
+#imgHolder{width: 15%; height: 85%; float: left; margin-top: 0.5%; margin-left: 3.5%;}
+
+#appImg{
+    border-radius: 10%;
+    width:75%;
+    height: 99%;   /*200%*/
+    margin: 0% 0%;
+    transition: transform .2s; /* Animation */
+}
+
+#appImg:hover{
+    transform: scale(1.1); /* Negative value decreases size.*/
+}
+#appTitleHolder{width: 67%; height: 85%; float: right; margin-right: 10%;}
+    
+#appHeadingOne{
+    color: rgb(94, 4, 53);
+    font-size: 260%;
+    font-family: sans-serif;
+    margin: 1.1% auto;
+}
+
+#middleWrapper{
+    width: 98%;
+    height: 90%;
+    margin: 2% auto;
+}
+
+#midLeft{
+    width: 46%;
+    height: 80%;
+    margin: 0% auto;
+    background-color: rgb(87, 72, 94);
+    border-radius: 1%;
+    float: left;
+    }
+
+.labels{
+    color: rgb(101, 138, 138);
+    padding-left: 20px;
+    font-size: 1rem;
+}
+
+#midRight{
+    width: 46%;
+    height: 80%;
+    margin: 0% auto;
+    background-color: rgb(159, 149, 163);
+    border-radius: 1%;
+    float: right;
+}
+
+#partiesToProtocol{
+    margin: 0.2% auto;
+}
+    
+.participantName, .mobileData{
+    padding-top: -20px;
+    text-align: center;
+    font-size: 1.5rem;
+    color: #5d7066;
+}
+
+.dataSection{
+    margin-top: 1%;
+    margin-left: 3.3%;
+}
+
+.control-group {
+    margin: 0.5% auto;
+    }
+     
+input {
+    text-align: center;
+    background-color: rgb(192, 187, 196);
+    border: 2px solid rgb(247, 242, 247);
+    border-radius: 3px;
+    font-size: 16px;
+    font-weight: 200;
+    padding: 10px 0;
+    width: 93%;
+    transition: border .5s;
+    border-radius: 4%;
+    margin: 1% auto;
+    }
+     
+input:focus {
+    border: 2px solid rgb(233, 176, 245);
+    box-shadow: none;
+    }
+     
+.btn {
+    border: 2px solid transparent;
+    background: rgb(155, 108, 147);
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 25px;
+    padding: 10px 0;
+    text-decoration: none;
+    text-shadow: none;
+    border-radius: 25%;
+    box-shadow: none;
+    transition: 0.45s;
+    display: block;
+    width: 25%;
+    margin: 1.5% auto;
+    }
+     
+.btn:hover {
+    background-color: rgb(161, 68, 146);
+    }
+
+
+#showNhideSuccess{display: none;}
+#showNhideError{display: none;}
+#initMsg{display: none;}
+#ipnsHash{display: none;}
+#uDataIPFSsuccess{display: none;}
+#ipnsReturnedHash{display: none;}
+#encryptedDataOnIPNS{display: none; width: 100%; height: 48%; margin-bottom: 0.5%;}
+#decryptedDataFromIPNS{display: none; width: 100%; height: 50%; margin-top: -1%;}
+
+#decryptedDataHeading{font-size: 1rem; 
+    text-align: center; 
+    color: rgb(12, 21, 37); 
+    text-decoration: underline;
+    font-style: italic;   
+    font-weight: bold;
+}
+
+table{
+    width: 100%;
+    height: 50%;
+}
+th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 1%;
+    width: 625px;
+    text-align: center;
+  }
+th {
+    height: 4px;
+    background-color: rgb(191, 176, 196);
+  }
+td {
+    height: 4px;
+    vertical-align: bottom;
+  }
+
+tr:hover {background-color: #8d979e;}
+tr:nth-child(even) {background-color: #f2f2f2;}
+    
+.success { background: #8ab19c; padding: 3pt; color: rgb(178, 43, 185); text-align: center;}
+.error { padding: 3pt; color: rgb(102, 43, 25); text-align: center; font-size: 120%;}
+.initPrompt{ background: #596960; padding: 3pt; color: rgb(221, 206, 233); text-align: center;}
+.successIPFSuData{ background: #63756b; padding: 3pt; color: rgb(221, 206, 233); text-align: center;}

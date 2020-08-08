@@ -6,7 +6,7 @@ import {
     getBlockchain, getMyUnspentTransactionOutputs, getUnspentTxOuts, sendTransaction
 } from './blockchain';
 import {connectToPeers, getSockets, initP2PServer} from './p2p';
-import {UnspentTxOut} from './transaction';
+import {UnspentTxOut, safeStringify} from './transaction';
 import {getTransactionPool} from './transactionPool';
 import {
     getPublicFromWallet, 
@@ -114,7 +114,7 @@ const initHttpServer = (myHttpPort: number) => {
                 throw Error('invalid address or amount');
             }
             const resp = sendTransaction(address, amount);
-            res.send(resp);
+            res.send(safeStringify(resp));
         } catch (e) {
             console.log(e.message);
             res.status(400).send(e.message);

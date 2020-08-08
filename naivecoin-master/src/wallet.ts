@@ -1,7 +1,7 @@
 import {ec} from 'elliptic';
 import {existsSync, readFileSync, unlinkSync, writeFileSync} from 'fs';
 import * as _ from 'lodash';
-import {getPublicKey, getTransactionId, signTxIn, Transaction, TxIn, TxOut, UnspentTxOut} from './transaction';
+import {getPublicKey, getTransactionId, signTxIn, Transaction, TxIn, TxOut, UnspentTxOut, safeStringify} from './transaction';
 
 import {Hasher} from './lib/hasher';
 import {PrivateKey} from './lib/private-key';
@@ -104,7 +104,7 @@ const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) =>
     }
 
     const eMsg = 'Cannot create transaction from the available unspent transaction outputs.' +
-        ' Required amount:' + amount + '. Available unspentTxOuts:' + JSON.stringify(myUnspentTxOuts);
+        ' Required amount:' + amount + '. Available unspentTxOuts:' + safeStringify(myUnspentTxOuts);
     throw Error(eMsg);
 };
 
@@ -142,7 +142,7 @@ const filterTxPoolTxs = (unspentTxOuts: UnspentTxOut[], transactionPool: Transac
 const createTransaction = (receiverAddress: string, amount: number, privateKey: string,
                            unspentTxOuts: UnspentTxOut[], txPool: Transaction[]): Transaction => {
 
-    console.log('txPool: %s', JSON.stringify(txPool));
+    console.log('txPool: %s', safeStringify(txPool));
     const myAddress: string = getPublicKey(privateKey);
     const myUnspentTxOutsA = unspentTxOuts.filter((uTxO: UnspentTxOut) => uTxO.address === myAddress);
 
@@ -161,16 +161,16 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
     const unsignedTxIns: TxIn[] = includedUnspentTxOuts.map(toUnsignedTxIn);
 
     const tx: Transaction = new Transaction();
+    const foreign_keys = getRingPublicFromWallet();
     tx.txIns = unsignedTxIns;
     tx.txOuts = createTxOuts(receiverAddress, myAddress, amount, leftOverAmount);
     tx.id = getTransactionId(tx);
 
     tx.txIns = tx.txIns.map((txIn: TxIn, index: number) => {
-        txIn.signature = signTxIn(tx, index, privateKey, unspentTxOuts);
+        txIn.signature = signTxIn(tx, index, foreign_keys, unspentTxOuts);
         txIn.signaturestring = txIn.signature.getc_summation();
         return txIn;
     });
-
     return tx;
 };
 

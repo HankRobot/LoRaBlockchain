@@ -1,0 +1,406 @@
+<html>
+
+<body>
+
+    <head>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+        <script src="https://unpkg.com/ipfs@0.35.0/dist/index.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="css/indexStyles.css">
+        <title>Improved DkSAP-IoT</title>
+    </head>
+    <div id="top">
+        <div id="imgHolder"><img id="appImg" src="imgs/DkSAPimg.png" alt="zkpImg" title="App Image" /></div>
+        <div id="appTitleHolder">
+            <p id="appHeadingOne">Improved Dual-key Stealth Address Protocol for IoT</p>
+        </div>
+    </div>
+
+    <div id="middleWrapper">
+        <div id="midLeft">
+            <div id="partiesToProtocol">
+                <p class="participantName">Sender A</p>
+                <button onclick="init()" class="btn btn-primary btn-large btn-block">Initialize</button>
+                <p class="initPrompt" id="initMsg"></strong></p>
+                <div class="control-group">
+                    <label class="labels">Message</label><input type="text" class="dataSection" value=""
+                        placeholder="Input Message to send" id="dataToSend">
+
+                    <label class="labels">SharedSecret</label><input type="text" class="dataSection" value=""
+                        placeholder="Input Shared Secret" id="sharedSecret">
+
+                    <label class="labels">Recipient</label><input type="text" class="dataSection" value=""
+                        placeholder="Input Receiver Address" id="recAddress">
+                </div>
+                <button onclick="sendTransaction()" class="btn btn-primary btn-large btn-block">Send</button>
+                <strong></strong>
+                <p class="success" id="showNhideSuccess"></strong></p>
+                <strong></strong>
+                <p class="error" id="showNhideError"></strong></p>
+                <p class="initPrompt" id="ipnsHash"></strong></p>
+            </div>
+        </div>
+
+        <div id="midRight">
+            <button onclick="getUserMobileData()" class="btn btn-primary btn-large btn-block">Get User Data</button>
+            <div id="rightTop">
+                <div id="encryptedDataOnIPNS" style="overflow-x:auto">
+                    <table style="table-layout: fixed; width: 100%">
+                        <thread>
+                            <tr>
+                                <th>Encrypted User Data from IPFS</th>
+                            </tr>
+                            <tr>
+                                <p>
+                                    <td style="word-wrap: break-word" id="encryptedData"></td>
+                                </p>
+                            </tr>
+                        </thread>
+                    </table>
+                </div>
+                <div id="decryptedDataFromIPNS" style="overflow-x:auto">
+                    <p id="decryptedDataHeading">Decrypted User Data from IPFS</p>
+                    <table id="myDynamicTable">
+                        <thread>
+                            <tbody>
+                               
+                            </tbody>
+                        </thread>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+<script type="text/javascript" src="js/jquery321.js"></script>
+
+<script>
+    if (typeof web3 !== 'undefined') {
+        web3 = new Web3(web3.currentProvider);
+    }
+    else {
+        // set the provider you want from Web3.providers
+        web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545")); // This node address should be same for Ganache.
+    }
+    web3.eth.getAccounts().then(accounts => {
+        console.log("Current addres is: ", accounts[accNum])
+        web3.eth.defaultAccount = accounts[accNum]
+    });
+
+    function reloadPg() {
+        window.setTimeout(function () {
+            window.location.href = "./index.html";
+        }, 1500); // Refresh after 1.5 sec.
+    }
+
+    function inputValidation(input) {
+        if (input == '' || input == null) {
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    }
+
+    let userCurrentIPFShash = ''
+    const staticIPNShash = 'QmV7EMuAEfQyBFckj8t81tRS1eddutiyX9CMxWKvrrtHZX' // Lab.
+    //const staticIPNShash = 'QmX9G52Vkh3hkgiSqZqUEhJhsFTPhjQGRchWycvemoCcrx' // Laptop.
+
+    function init() { // This is a one-time function call. 
+        var msg = ''
+        var sharedSecret = 0;
+        var counterValue = 0;
+        var recAdd = ''
+        // Prepare data to be in Object format.
+        let senderObj = { msg1: msg, sharedSecret1: sharedSecret, counterValue1: counterValue, recAdd1: recAdd }
+        // Data encryption begins.
+        const msgJSONstr = JSON.stringify({ ...senderObj }) // Without JSON.stringfy, error is thrown at encryption stage.
+        console.log("Object to be stored on IPFS: ", msgJSONstr)
+        var key = prompt("Please enter Data Encryption key. Keep it safe.");
+        var encryptedMsg = CryptoJS.AES.encrypt(msgJSONstr, key).toString();
+        console.log("Encrypted Public Key data: ", encryptedMsg)
+        // Data encryption ends here.
+        // Send to IPFS.
+        const Myipfs = new window.Ipfs()
+        //const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
+        Myipfs.on('ready', () => {
+            const MyBuffer = window.Ipfs.Buffer
+            const ipfsPreparedData = MyBuffer.from(encryptedMsg)
+            Myipfs.add(ipfsPreparedData, function (error, result) {
+                if (error || !result) {
+                    console.log("IPFS Error!");
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                    document.getElementById("showNhideError").innerHTML = "Error with IPFS."
+                }
+                else {
+                    var ipfsHash = result;
+                    console.log("IPFS Success!");
+                    console.log("IPFS Hash is:", ipfsHash)
+                    // Get Hash content from IPFS returned array.
+                    var returnedHash = ipfsHash[0].hash // This can be accessed on "https://ipfs.io/ipfs/returnedHash"
+                    console.log("Returned hash is:", returnedHash)
+                    // Publish new hash to IPNS.
+                    userCurrentIPFShash = returnedHash;
+                    $("#initMsg").show(); // Display the hidden div to accept the comming entries.
+                    document.getElementById("initMsg").innerHTML = "IPFS hash: " + userCurrentIPFShash;
+                    console.log("Initialization completed.")
+                    publishToIPNS(returnedHash);
+                    return
+                }
+            })
+        })
+    }
+
+    async function publishToIPNS(returnedHash) {
+        console.log("IPNS function activated.")
+        const Myipfs = new window.Ipfs()
+        //const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
+        Myipfs.on('ready', () => {
+            Myipfs.name.publish(returnedHash, function (error, result) {
+                if (error || !result) {
+                    console.log("IPNS Error!");
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                    document.getElementById("showNhideError").innerHTML = "Error publishing to IPNS."
+                }
+                else {
+                    console.log("IPNS Success!");
+                    let ipnsHash = result.name;  // This should be same as Peer ID. All users must point to this. 
+                    console.log("IPNS address is:", ipnsHash)
+                    $("#ipnsHash").show(); // Display the hidden div to accept the comming entries.
+                    document.getElementById("ipnsHash").innerHTML = "IPNS hash: " + ipnsHash;
+                    console.log("IPNS execution completed.")
+                }
+            })
+        })
+    }
+
+
+    function sendTransaction() {
+        console.log("Btn clicked.")
+        var msg = $("#dataToSend").val();
+        var sharedSecret = $("#sharedSecret").val();
+        //var counterValue = $("#counterValue").val(); Must be auto-increment.
+        var recAdd = $("#recAddress").val();
+
+        if (inputValidation(msg) == 1 && web3.utils.isAddress(recAdd) == true &&
+            isNaN(sharedSecret) == false) {
+            // Passed input validation.
+            console.log("Passed input validation.")
+            // Get User mobile data on IPNS.
+            const Myipfs = new window.Ipfs()
+            Myipfs.on('ready', () => {
+                // Resolve the IPNS name or address before data can be retrieved via cat.
+                Myipfs.name.resolve(staticIPNShash, function (err, name) {
+                    if (err) {
+                        console.log("IPNS name resolution failed.");
+                    }
+                    else {
+                        console.log("IPFS equivalent hash is: ", name.path);
+                        // Get the data.
+                        Myipfs.cat(name.path, function (error, DataFromIPFS) {
+                            if (error) {
+                                //throw error
+                                console.log("Invalid hash.")
+                                $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                document.getElementById("showNhideError").innerHTML = "Invalid IPFS hash.";
+                            }
+                            else {
+                                var encryptedUserMobileData = DataFromIPFS.toString('utf8')
+                                var secretKey = prompt("Please enter IPFS Data decryption key.");
+                                console.log("Verifying Key. Please wait...")
+                                // Decrypt it before parsing.
+                                try {
+                                    var decryptedUserMobileData = CryptoJS.AES.decrypt(encryptedUserMobileData, secretKey);
+                                    var BytesString = JSON.parse(decryptedUserMobileData.toString(CryptoJS.enc.Utf8));
+                                }
+                                catch (err) {
+                                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                    document.getElementById("showNhideError").innerHTML = "Wrong decryption Key.";
+                                    return
+                                }
+                                if (Object.keys(BytesString).length != 0) {
+                                    // Add the new data to the object and send to IPFS then publish to IPNS.
+                                    // Building new object keys.
+                                    // Original data: {msg:msg, sharedSecret:sharedSecret,counterValue:counterValue,recAdd:recAdd}
+                                    let countEntries = Object.keys(BytesString).length  // Get current number of items.
+                                    console.log("Original number of entries: ", countEntries)
+                                    let increasedObjCount = (countEntries / 4) + 1
+                                    let newMsg = 'msg'
+                                    let newMsgIndex = newMsg.concat(increasedObjCount)
+                                    let shSecret = 'sharedSecret'
+                                    let newshSecret = shSecret.concat(increasedObjCount)
+                                    let newcounterValue = 'counterValue'
+                                    let increasedCounterValue = newcounterValue.concat(increasedObjCount)
+                                    let newRecAdd = 'recAdd'
+                                    let newRecAddIndex = newRecAdd.concat(increasedObjCount)
+                                    // Get counter value and increment it.
+                                    var counters = Object.keys(BytesString).filter(function (k) {
+                                        return k.indexOf('counterValue') == 0;
+                                    }).reduce(function (pulledCounterData, k) {
+                                        pulledCounterData[k] = BytesString[k];
+                                        return pulledCounterData;
+                                    }, {});
+                                    let countersArray = Object.values(counters)
+                                    console.log("Counters object: ", countersArray)
+                                    let counterLength = countersArray.length
+                                    console.log("Next counter in use: ", counterLength)
+                                    // Update the object.
+                                    BytesString[newMsgIndex] = msg;
+                                    BytesString[newshSecret] = sharedSecret;
+                                    BytesString[increasedCounterValue] = counterLength;
+                                    BytesString[newRecAddIndex] = recAdd;
+                                    console.log("Object updated.")
+                                    console.log("New object is: ", BytesString)
+                                    // Add to ipfs and publish to IPNS.
+                                    const msgJSONstr = JSON.stringify({ ...BytesString }) // Without JSON.stringfy, error is thrown at encryption stage.
+                                    var key = prompt("Please enter Data Encryption key. Keep it safe.");
+                                    var encryptedMsg = CryptoJS.AES.encrypt(msgJSONstr, key).toString();
+                                    console.log("Encrypted data: ", encryptedMsg)
+                                    // Data encryption ends here.
+                                    // Send to IPFS.
+                                    const MyBuffer = window.Ipfs.Buffer
+                                    let ipfsPreparedData = MyBuffer.from(encryptedMsg)
+                                    Myipfs.add(ipfsPreparedData, function (error, result) {
+                                        if (error || !result) {
+                                            console.log("IPFS Error!");
+                                            $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                            document.getElementById("showNhideError").innerHTML = "Error with IPFS."
+                                        }
+                                        else {
+                                            var ipfsHash = result;
+                                            console.log("IPFS Success!");
+                                            console.log("IPFS Hash is:", ipfsHash)
+                                            // Get Hash content from IPFS returned array.
+                                            var returnedHash = ipfsHash[0].hash // This can be accessed on "https://ipfs.io/ipfs/returnedHash"
+                                            console.log("Returned hash is:", returnedHash)
+                                            // Publish new hash to IPNS.
+                                            userCurrentIPFShash = returnedHash;
+                                            publishToIPNS(returnedHash);
+                                            return
+                                        }
+                                    })
+                                }
+                                else {
+                                    console.log("No user mobile data found.")
+                                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                    document.getElementById("showNhideError").innerHTML = "No user mobile data.";
+                                    return;
+                                }
+                            }
+                        })
+                    }
+                })
+            });
+        }
+        else {
+            $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+            document.getElementById("showNhideError").innerHTML = "Invalid input."
+            reloadPg();
+        }
+    }
+
+    async function getUserMobileData() {
+        console.log("Attempting to retrieve User data.")
+        const Myipfs = new window.Ipfs()
+        Myipfs.on('ready', () => {
+            // Resolve the IPNS name or address before data can be retrieved via cat.
+            Myipfs.name.resolve(staticIPNShash, function (err, name) {
+                if (err) {
+                    console.log("IPNS name resolution failed.");
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                    document.getElementById("showNhideError").innerHTML = "IPNS name resolution failed.";
+                }
+                else {
+                    console.log("IPFS equivalent hash is: ", name.path);
+                    // Get the data.
+                    Myipfs.cat(name.path, function (error, DataFromIPFS) {
+                        if (error) {
+                            //throw error
+                            console.log("Invalid hash.")
+                            $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                            document.getElementById("showNhideError").innerHTML = "Invalid IPFS hash.";
+                        }
+                        else {
+                            var encryptedUserData = DataFromIPFS.toString('utf8')
+                            // Show the encrypted data on DOM.
+                            // Showing first the encrypted data.
+                            $("#encryptedDataOnIPNS").show(); // Display the hidden div to accept the comming entries.
+                            document.getElementById("encryptedData").innerHTML = encryptedUserData
+                            // Pass to decryption and showing function.
+                            decryptDataAndShow(encryptedUserData)
+                        }
+                    })
+                }
+            })
+        });
+    }
+
+    function decryptDataAndShow(encryptedUserData) {
+        // Get user decryption key.
+        var key = prompt("Enter data decryption key.")
+        console.log("Verifying Key. Please wait...")
+        // Decrypt it before parsing.
+        try {
+            var decryptedUserData = CryptoJS.AES.decrypt(encryptedUserData, key);
+            var BytesString = JSON.parse(decryptedUserData.toString(CryptoJS.enc.Utf8));
+        }
+        catch (err) {
+            console.log("Sorry. Wrong decryption key.")
+            $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+            document.getElementById("showNhideError").innerHTML = "Sorry! Wrong decryption key.";
+            return;
+        }
+        if (Object.keys(BytesString).length != 0) {
+            console.log("Decryption successful. Please wait ...")
+            console.log("Decrypted data is: ", BytesString);
+            let arrayBytesString = Object.values(BytesString)
+            console.log("BytesString as array is: ", arrayBytesString)
+            // Get all items. Object Structure: {msg:msg, sharedSecret:sharedSecret,counterValue:counterValue,recAdd:recAdd}
+            // Testing part retrieval: Receivers
+            var receivers = Object.keys(BytesString).filter(function (k) {
+                return k.indexOf('recAdd') == 0;
+            }).reduce(function (pulledRecData, k) {
+                pulledRecData[k] = BytesString[k];
+                return pulledRecData;
+            }, {});
+            let recArray = Object.values(receivers)
+            console.log("All receivers are: ", recArray)
+            // Display the hidden div to accept the comming entries.
+            $("#decryptedDataFromIPNS").show(); 
+            $('tbody', '#myDynamicTable').append('<tr><td>'+ 'Message'+'</td><td>'+'Shared Secret'+'</td><td>'+ 'Counter'+'</td><td>'+'Receiver'+'</td></tr>')
+            
+            // Call create table function.
+            let numberOfColPerRow = 4
+            createTable(arrayBytesString.slice(4),numberOfColPerRow)
+            return
+        }
+        else {
+            console.log("Sorry. Empty IPFS data.") // Public key pool at IPFS is empty.
+            $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+            document.getElementById("showNhideError").innerHTML = "Sorry! No user data found.";
+            return;
+        }
+    }
+
+function createTable(array,numCellsToCreate) {
+    var count = 0;
+    var html = '';
+    for (var i = 0; i < array.length/numCellsToCreate; i++) {
+        // Open tag
+        html += '<tr>';
+        for (var j = 0; j < numCellsToCreate; j++) {
+            html += '<td>' + array[count] + '</td>';
+            count++;
+        }
+        // Close tag.
+        html += '</tr>';
+    }
+    // Insert into DOM.
+    $('tbody', '#myDynamicTable').append(html);
+    // Count reset.
+    count = 0;
+}
+</script>
+</html>

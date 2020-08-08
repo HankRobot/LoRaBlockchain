@@ -4,7 +4,7 @@ import {
     addBlockToChain, Block, getBlockchain, getLatestBlock, handleReceivedTransaction, isValidBlockStructure,
     replaceChain
 } from './blockchain';
-import {Transaction} from './transaction';
+import {Transaction, safeStringify} from './transaction';
 import {getTransactionPool} from './transactionPool';
 
 const sockets: WebSocket[] = [];
@@ -62,7 +62,7 @@ const initMessageHandler = (ws: WebSocket) => {
                 console.log('could not parse received JSON message: ' + data);
                 return;
             }
-            console.log('Received message: %s', JSON.stringify(message));
+            console.log('Received message: %s', safeStringify(message));
             switch (message.type) {
                 case MessageType.QUERY_LATEST:
                     write(ws, responseLatestMsg());
@@ -73,7 +73,7 @@ const initMessageHandler = (ws: WebSocket) => {
                 case MessageType.RESPONSE_BLOCKCHAIN:
                     const receivedBlocks: Block[] = JSONToObject<Block[]>(message.data);
                     if (receivedBlocks === null) {
-                        console.log('invalid blocks received: %s', JSON.stringify(message.data));
+                        console.log('invalid blocks received: %s', safeStringify(message.data));
                         break;
                     }
                     handleBlockchainResponse(receivedBlocks);
@@ -84,7 +84,7 @@ const initMessageHandler = (ws: WebSocket) => {
                 case MessageType.RESPONSE_TRANSACTION_POOL:
                     const receivedTransactions: Transaction[] = JSONToObject<Transaction[]>(message.data);
                     if (receivedTransactions === null) {
-                        console.log('invalid transaction received: %s', JSON.stringify(message.data));
+                        console.log('invalid transaction received: %s', safeStringify(message.data));
                         break;
                     }
                     receivedTransactions.forEach((transaction: Transaction) => {
@@ -105,7 +105,7 @@ const initMessageHandler = (ws: WebSocket) => {
     });
 };
 
-const write = (ws: WebSocket, message: Message): void => ws.send(JSON.stringify(message));
+const write = (ws: WebSocket, message: Message): void => ws.send(safeStringify(message));
 const broadcast = (message: Message): void => sockets.forEach((socket) => write(socket, message));
 
 const queryChainLengthMsg = (): Message => ({'type': MessageType.QUERY_LATEST, 'data': null});
@@ -113,12 +113,12 @@ const queryChainLengthMsg = (): Message => ({'type': MessageType.QUERY_LATEST, '
 const queryAllMsg = (): Message => ({'type': MessageType.QUERY_ALL, 'data': null});
 
 const responseChainMsg = (): Message => ({
-    'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': JSON.stringify(getBlockchain())
+    'type': MessageType.RESPONSE_BLOCKCHAIN, 'data': safeStringify(getBlockchain())
 });
 
 const responseLatestMsg = (): Message => ({
     'type': MessageType.RESPONSE_BLOCKCHAIN,
-    'data': JSON.stringify([getLatestBlock()])
+    'data': safeStringify([getLatestBlock()])
 });
 
 const queryTransactionPoolMsg = (): Message => ({
@@ -128,7 +128,7 @@ const queryTransactionPoolMsg = (): Message => ({
 
 const responseTransactionPoolMsg = (): Message => ({
     'type': MessageType.RESPONSE_TRANSACTION_POOL,
-    'data': JSON.stringify(getTransactionPool())
+    'data': safeStringify(getTransactionPool())
 });
 
 const initErrorHandler = (ws: WebSocket) => {

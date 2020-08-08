@@ -1,5 +1,5 @@
 import * as _ from 'lodash';
-import {Transaction, TxIn, UnspentTxOut, validateTransaction} from './transaction';
+import {Transaction, TxIn, UnspentTxOut, validateTransaction, safeStringify} from './transaction';
 
 let transactionPool: Transaction[] = [];
 
@@ -16,7 +16,7 @@ const addToTransactionPool = (tx: Transaction, unspentTxOuts: UnspentTxOut[]) =>
     if (!isValidTxForPool(tx, transactionPool)) {
         throw Error('2 Trying to add invalid tx to pool');
     }
-    console.log('adding to txPool: %s', JSON.stringify(tx));
+    console.log('adding to txPool: %s', safeStringify(tx));
     transactionPool.push(tx);
 };
 
@@ -38,7 +38,7 @@ const updateTransactionPool = (unspentTxOuts: UnspentTxOut[]) => {
         }
     }
     if (invalidTxs.length > 0) {
-        console.log('removing the following transactions from txPool: %s', JSON.stringify(invalidTxs));
+        console.log('removing the following transactions from txPool: %s', safeStringify(invalidTxs));
         transactionPool = _.without(transactionPool, ...invalidTxs);
     }
 };

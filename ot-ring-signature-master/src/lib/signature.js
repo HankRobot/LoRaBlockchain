@@ -10,9 +10,7 @@ export default class Signature{
   }
 
   getc_summation() {
-    console.log("c: summation test");
-    const test = this.c_summation(this.c_array,this.hasher).umod(this.hasher.l).toString('hex');
-    console.log(test);
+    let test = new BN(c_array,16).toString('hex');
     return test;
   }
 

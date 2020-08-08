@@ -2,7 +2,8 @@ import * as CryptoJS from 'crypto-js';
 import * as ecdsa from 'elliptic';
 import * as _ from 'lodash';
 const ec = new ecdsa.ec('secp256k1');
-
+import * as util from 'util' // has no default export
+const {parse, stringify} = require('flatted/cjs');
 const COINBASE_AMOUNT: number = 50;
 
 import {Hasher} from './lib/hasher';
@@ -98,10 +99,30 @@ const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTx
     return true;
 };
 
+const safeStringify = (obj, indent = 2) => {
+    /*
+    let cache = [];
+    const retVal = JSON.stringify(
+      obj,
+      (key, value) =>
+        typeof value === "object" && value !== null
+          ? cache.includes(value)
+            ? undefined // Duplicate reference found, discard key
+            : cache.push(value) && value // Store value in our collection
+          : value,
+      indent
+    );
+    cache = null;
+    return retVal;
+    */
+   //return util.inspect(obj);
+   return stringify(obj);
+};
+
 const validateBlockTransactions = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[], blockIndex: number): boolean => {
     const coinbaseTx = aTransactions[0];
     if (!validateCoinbaseTx(coinbaseTx, blockIndex)) {
-        console.log('invalid coinbase transaction: ' + JSON.stringify(coinbaseTx));
+        console.log('invalid coinbase transaction: ' + safeStringify(coinbaseTx));
         return false;
     }
 
@@ -168,17 +189,18 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
     const referencedUTxOut: UnspentTxOut =
         aUnspentTxOuts.find((uTxO) => uTxO.txOutId === txIn.txOutId && uTxO.txOutIndex === txIn.txOutIndex);
     if (referencedUTxOut == null) {
-        console.log('referenced txOut not found: ' + JSON.stringify(txIn));
+        console.log('referenced txOut not found: ' + safeStringify(txIn));
         return false;
     }
     const address = referencedUTxOut.address;
-
+    
     const hasher = new Hasher();
     const key = new PrivateKey(getRingPrivateFromWallet()[0],hasher);
     const foreign_keys = getRingPublicFromWallet();
     const signature = key.sign(transaction.id,foreign_keys);
     const validSignature: boolean = signature.verify(transaction.id,signature.public_keys)// && signature.getc_summation() == txIn.signaturestring ;
-
+    
+    //const validSignature: boolean = txIn.signature.verify(transaction.id,txIn.signature.public_keys)
     //const key = ec.keyFromPublic(address, 'hex');
     //const validSignature: boolean = key.verify(transaction.id, txIn.signature);
     //const validSignature: boolean = true;//txIn.signature.verify(transaction.id,txIn.signature.public_keys);
@@ -213,7 +235,7 @@ const getCoinbaseTransaction = (address: string, blockIndex: number): Transactio
 };
 
 const signTxIn = (transaction: Transaction, txInIndex: number,
-                  privateKey: string, aUnspentTxOuts: UnspentTxOut[]): Signature => {
+                  address: PublicKey[], aUnspentTxOuts: UnspentTxOut[]): Signature => {
     const txIn: TxIn = transaction.txIns[txInIndex];
 
     const dataToSign = transaction.id;
@@ -223,26 +245,26 @@ const signTxIn = (transaction: Transaction, txInIndex: number,
         throw Error();
     }
     const referencedAddress = referencedUnspentTxOut.address;
-
+    /*
     if (getPublicKey(privateKey) !== referencedAddress) {
         console.log('trying to sign an input with private' +
             ' key that does not match the address that is referenced in txIn');
         throw Error();
     }
+    */
     //const key = ec.keyFromPrivate(privateKey, 'hex');
     const hasher = new Hasher();
     const key = new PrivateKey(getRingPrivateFromWallet()[0],hasher);
     //create private keys and their corresponding public keys
-    const foreign_keys = getRingPublicFromWallet();
                           
     //create ring signature by signing with the private key
-    const signature = key.sign(dataToSign,foreign_keys);
+    const signature = key.sign(dataToSign,address);
     
     //const signature: string = toHexString(key.sign(dataToSign).toDER());
 
     return signature;
 };
-
+                                                                                                                                                                    
 const updateUnspentTxOuts = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[]): UnspentTxOut[] => {
     const newUnspentTxOuts: UnspentTxOut[] = aTransactions
         .map((t) => {
@@ -312,6 +334,7 @@ const isValidTxOutStructure = (txOut: TxOut): boolean => {
     } else if (!isValidAddress(txOut.address)) {
         console.log('invalid TxOut address');
         return false;
+    
     } else if (typeof txOut.amount !== 'number') {
         console.log('invalid amount type in txOut');
         return false;
@@ -367,5 +390,5 @@ const isValidAddress = (address: string): boolean => {
 export {
     processTransactions, signTxIn, getTransactionId, isValidAddress, validateTransaction,
     UnspentTxOut, TxIn, TxOut, getCoinbaseTransaction, getPublicKey, hasDuplicates,
-    Transaction
+    Transaction, safeStringify
 };
