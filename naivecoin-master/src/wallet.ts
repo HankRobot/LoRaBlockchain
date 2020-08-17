@@ -8,6 +8,7 @@ import {PrivateKey} from './lib/private-key';
 import {PublicKey} from './lib/public-key';
 import {Prng} from './lib/prng';
 import {Signature} from './lib/signature';
+import { getAccountBalance } from './blockchain';
 
 const PedersenCommitment = (amount:number): any =>{
     const pederson = new Pedersen(
@@ -15,15 +16,7 @@ const PedersenCommitment = (amount:number): any =>{
         '959144013c88c9782d5edd2d12f54885aa4ba687'
     );
     let secret = '1184c47884aeead9816654a63d4209d6e8e906e29';
-    //console.log(secret)
-
     const commitment = pederson.commit(amount.toString(), secret)
-    //secret = pederson.newSecret();
-    //console.log(secret)
-    //const testB = pederson.commit('4', secret)
-
-    //console.log(pederson.verify('5', [pederson.combine([testA, testB])], secret));
-    //console.log('✅ pedersen tests passed')
     return [commitment,secret]
 };
 
@@ -114,7 +107,7 @@ const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) =>
     const includedUnspentTxOuts = [];
     for (const myUnspentTxOut of myUnspentTxOuts) {
         includedUnspentTxOuts.push(myUnspentTxOut);
-        currentAmount = currentAmount + myUnspentTxOut.amount;
+        currentAmount = getAccountBalance();
         if (currentAmount >= amount) {
             const leftOverAmount = currentAmount - amount;
             return {includedUnspentTxOuts, leftOverAmount};
@@ -128,11 +121,11 @@ const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) =>
 
 const createTxOuts = (receiverAddress: string, myAddress: string, amount, leftOverAmount: number) => {
 
-    const txOut1: TxOut = new TxOut(receiverAddress, amount, PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
+    const txOut1: TxOut = new TxOut(receiverAddress, 0, PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
     if (leftOverAmount === 0) {
         return [txOut1];
     } else {
-        const leftOverTx = new TxOut(myAddress, leftOverAmount, PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
+        const leftOverTx = new TxOut(myAddress, 1, PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
         return [txOut1, leftOverTx];
     }
 };

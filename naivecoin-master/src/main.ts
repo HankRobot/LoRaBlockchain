@@ -149,4 +149,3 @@ initHttpServer(httpPort);
 initP2PServer(p2pPort);
 initWallet();
 getAccountBalance();
-//PedersenCommitment();

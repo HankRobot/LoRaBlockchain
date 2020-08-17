@@ -182,10 +182,12 @@ const validateCoinbaseTx = (transaction: Transaction, blockIndex: number): boole
         console.log('invalid number of txOuts in coinbase transaction');
         return false;
     }
+    /*
     if (transaction.txOuts[0].amount !== COINBASE_AMOUNT) {
         console.log('invalid coinbase amount in coinbase transaction');
         return false;
     }
+    */
     return true;
 };
 
@@ -233,7 +235,7 @@ const getCoinbaseTransaction = (address: string, blockIndex: number): Transactio
     txIn.txOutIndex = blockIndex;
 
     t.txIns = [txIn];
-    t.txOuts = [new TxOut(address, COINBASE_AMOUNT, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
+    t.txOuts = [new TxOut(address, 1, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
     t.id = getTransactionId(t);
     return t;
 };
@@ -338,11 +340,13 @@ const isValidTxOutStructure = (txOut: TxOut): boolean => {
     } else if (!isValidAddress(txOut.address)) {
         console.log('invalid TxOut address');
         return false;
-    
-    } else if (typeof txOut.amount !== 'number') {
+    } 
+    /*else if (typeof txOut.amount !== 'number') {
         console.log('invalid amount type in txOut');
         return false;
-    } else {
+        
+    }*/ 
+    else {
         return true;
     }
 };

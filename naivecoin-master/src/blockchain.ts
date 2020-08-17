@@ -150,37 +150,49 @@ const getAccountBalance = (): number => {
     const pederson = new Pedersen(
         '925f15d93a513b441a78826069b4580e3ee37fc5',
         '959144013c88c9782d5edd2d12f54885aa4ba687'
-    );
+    )
+    let totalamount:number = 0;
+    let coinamount:number = 0;
     let amount:number = 0;
     let pedersenlist:Array<any> = [];
     getBlockchain().forEach(block => {
         block.data.forEach(data=>{
-            const validtxouts = data.txOuts.filter((uTxO: TxOut) => uTxO.address === getPublicFromWallet());
-            console.log("valid txouts", validtxouts)
-            validtxouts.forEach(txout => {
+            //get txouts with both sender and receiver, where u are the sender
+            if (data.txOuts.length > 1 && data.txOuts[1].address == getPublicFromWallet()) {
+                while (!pederson.verify(amount.toString(), [data.txOuts[0].pedersen], data.txOuts[0].secret)) {
+                    amount++;
+                }
+                totalamount -= amount;
+                amount = 0;
+            }
+            //if you are the receiver
+            if (data.txOuts.length > 1 && data.txOuts[0].address == getPublicFromWallet()) {
+                while (!pederson.verify(amount.toString(), [data.txOuts[0].pedersen], data.txOuts[0].secret)) {
+                    amount++;
+                }
+                totalamount += amount;
+                amount = 0;
+            }
+
+            const coinbasetxouts = data.txOuts.filter((uTxO: TxOut) => (uTxO.address === getPublicFromWallet() && data.txOuts.length===1));
+            coinbasetxouts.forEach(txout => {
                 pedersenlist.push(txout.pedersen);
-                console.log("Pedersen List ", pedersenlist);
-                if (pedersenlist.length == 1) {
-                    while (!pederson.verify(amount.toString(), pedersenlist, txout.secret)) {
+                coinamount = 0;
+                pedersenlist.forEach(pedersencommit => {
+                    while (!pederson.verify(amount.toString(), [pedersencommit], txout.secret)) {
                         amount++;
-                        console.log(amount);
                     }
-                }
-                else {
-                    while (!pederson.verify(amount.toString(), [pederson.combine(pedersenlist)], txout.secret)) {
-                        amount++;
-                        console.log(amount);
-                    }
-                }
+                    coinamount += amount;
+                    amount = 0;
+                });   
             });
         });
     });
-
     
-
+    totalamount += coinamount;
     console.log("Your public wallet", getPublicFromWallet())
-    console.log("Your amount", amount);
-    return amount;
+    console.log("Your amount", totalamount);
+    return totalamount;
     //return getBalance(getPublicFromWallet(), getUnspentTxOuts());
 };
 
