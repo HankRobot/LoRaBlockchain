@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const xorshift_js_1 = require("xorshift.js");
 const crypto = require("crypto");
+//import * as bigInt from 'big-integer';
 class Prng {
     constructor() {
         this.seed = crypto.randomBytes(16).toString('hex');

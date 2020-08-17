@@ -9,13 +9,10 @@
   },
   "dependencies": {
     "axios": "^0.19.2",
-    "big-integer": "^1.6.48",
-    "bigint-typescript-definitions": "^5.5.3-0",
     "bn.js": "^4.11.8",
     "body-parser": "^1.19.0",
     "coinkey": "^3.0.0",
     "cross-env": "^5.0.1",
-    "crypto": "^1.0.1",
     "crypto-js": "^3.1.6",
     "crypto-random-int": "^1.0.1",
     "elliptic": "^6.4.0",
@@ -41,7 +38,7 @@
   },
   "devDependencies": {
     "@types/body-parser": "^1.16.4",
-    "@types/crypto-js": "^3.1.47",
+    "@types/crypto-js": "^3.1.33",
     "@types/express": "^4.0.36",
     "@types/lodash": "^4.14.85",
     "@types/node": "^8.10.62",

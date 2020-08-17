@@ -12,7 +12,7 @@ import {PublicKey} from './lib/public-key';
 import {Prng} from './lib/prng';
 import {Signature} from './lib/signature';
 import { //getPublicFromWallet, getPrivateFromWallet, 
-    getRingPrivateFromWallet, getRingPublicFromWallet} from './wallet';
+    getRingPrivateFromWallet, getRingPublicFromWallet, PedersenCommitment} from './wallet';
 
 class UnspentTxOut {
     public readonly txOutId: string;
@@ -38,10 +38,14 @@ class TxIn {
 class TxOut {
     public address: string;
     public amount: number;
+    public pedersen: any;
+    public secret: any;
 
-    constructor(address: string, amount: number) {
+    constructor(address: string, amount: number, pedersen:any, secret:any) {
         this.address = address;
         this.amount = amount;
+        this.pedersen = pedersen;
+        this.secret = secret;
     }
 }
 
@@ -229,7 +233,7 @@ const getCoinbaseTransaction = (address: string, blockIndex: number): Transactio
     txIn.txOutIndex = blockIndex;
 
     t.txIns = [txIn];
-    t.txOuts = [new TxOut(address, COINBASE_AMOUNT)];
+    t.txOuts = [new TxOut(address, COINBASE_AMOUNT, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
     t.id = getTransactionId(t);
     return t;
 };

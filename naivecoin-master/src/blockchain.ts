@@ -1,14 +1,17 @@
 import * as CryptoJS from 'crypto-js';
+import * as crypto from 'crypto'
 import * as _ from 'lodash';
 import {broadcastLatest, broadCastTransactionPool} from './p2p';
 import {
-    getCoinbaseTransaction, isValidAddress, processTransactions, Transaction, UnspentTxOut, safeStringify
+    getCoinbaseTransaction, isValidAddress, processTransactions, Transaction, UnspentTxOut, safeStringify, TxOut
 } from './transaction';
 import {addToTransactionPool, getTransactionPool, updateTransactionPool} from './transactionPool';
 import {hexToBinary} from './util';
 import {createTransaction, findUnspentTxOuts, getBalance
     , getPrivateFromWallet, getPublicFromWallet
     } from './wallet';
+import * as Pedersen from 'simple-js-pedersen-commitment'
+import { forEach } from 'lodash';
 
 class Block {
     public index: number;
@@ -35,7 +38,9 @@ const genesisTransaction = {
     'txIns': [{'signaturestring': '', 'signature': null, 'txOutId': '', 'txOutIndex': 0}],
     'txOuts': [{
         'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
-        'amount': 50
+        'amount': 50,
+        'pedersen': null,
+        'secret': null
     }],
     'id': 'e655f6a5f26dc9b4cac6e46f52336428287759cf81ef5ff10854f69d68f43fa3'
 };
@@ -142,7 +147,41 @@ const findBlock = (index: number, previousHash: string, timestamp: number, data:
 };
 
 const getAccountBalance = (): number => {
-    return getBalance(getPublicFromWallet(), getUnspentTxOuts());
+    const pederson = new Pedersen(
+        '925f15d93a513b441a78826069b4580e3ee37fc5',
+        '959144013c88c9782d5edd2d12f54885aa4ba687'
+    );
+    let amount:number = 0;
+    let pedersenlist:Array<any> = [];
+    getBlockchain().forEach(block => {
+        block.data.forEach(data=>{
+            const validtxouts = data.txOuts.filter((uTxO: TxOut) => uTxO.address === getPublicFromWallet());
+            console.log("valid txouts", validtxouts)
+            validtxouts.forEach(txout => {
+                pedersenlist.push(txout.pedersen);
+                console.log("Pedersen List ", pedersenlist);
+                if (pedersenlist.length == 1) {
+                    while (!pederson.verify(amount.toString(), pedersenlist, txout.secret)) {
+                        amount++;
+                        console.log(amount);
+                    }
+                }
+                else {
+                    while (!pederson.verify(amount.toString(), [pederson.combine(pedersenlist)], txout.secret)) {
+                        amount++;
+                        console.log(amount);
+                    }
+                }
+            });
+        });
+    });
+
+    
+
+    console.log("Your public wallet", getPublicFromWallet())
+    console.log("Your amount", amount);
+    return amount;
+    //return getBalance(getPublicFromWallet(), getUnspentTxOuts());
 };
 
 const sendTransaction = (address: string, amount: number): Transaction => {

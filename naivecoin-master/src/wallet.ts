@@ -2,12 +2,30 @@ import {ec} from 'elliptic';
 import {existsSync, readFileSync, unlinkSync, writeFileSync} from 'fs';
 import * as _ from 'lodash';
 import {getPublicKey, getTransactionId, signTxIn, Transaction, TxIn, TxOut, UnspentTxOut, safeStringify} from './transaction';
-
+import * as Pedersen from 'simple-js-pedersen-commitment'
 import {Hasher} from './lib/hasher';
 import {PrivateKey} from './lib/private-key';
 import {PublicKey} from './lib/public-key';
 import {Prng} from './lib/prng';
 import {Signature} from './lib/signature';
+
+const PedersenCommitment = (amount:number): any =>{
+    const pederson = new Pedersen(
+        '925f15d93a513b441a78826069b4580e3ee37fc5',
+        '959144013c88c9782d5edd2d12f54885aa4ba687'
+    );
+    let secret = '1184c47884aeead9816654a63d4209d6e8e906e29';
+    //console.log(secret)
+
+    const commitment = pederson.commit(amount.toString(), secret)
+    //secret = pederson.newSecret();
+    //console.log(secret)
+    //const testB = pederson.commit('4', secret)
+
+    //console.log(pederson.verify('5', [pederson.combine([testA, testB])], secret));
+    //console.log('✅ pedersen tests passed')
+    return [commitment,secret]
+};
 
 const EC = new ec('secp256k1');
 const privateKeyLocation = process.env.PRIVATE_KEY || 'node/wallet/private_key';
@@ -109,11 +127,12 @@ const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) =>
 };
 
 const createTxOuts = (receiverAddress: string, myAddress: string, amount, leftOverAmount: number) => {
-    const txOut1: TxOut = new TxOut(receiverAddress, amount);
+
+    const txOut1: TxOut = new TxOut(receiverAddress, amount, PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
     if (leftOverAmount === 0) {
         return [txOut1];
     } else {
-        const leftOverTx = new TxOut(myAddress, leftOverAmount);
+        const leftOverTx = new TxOut(myAddress, leftOverAmount, PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
         return [txOut1, leftOverTx];
     }
 };
@@ -176,4 +195,4 @@ const createTransaction = (receiverAddress: string, amount: number, privateKey: 
 
 export {createTransaction, getPublicFromWallet,
     getPrivateFromWallet, getBalance, generatePrivateKey, initWallet, deleteWallet, findUnspentTxOuts,
-    getRingPrivateFromWallet,getRingPublicFromWallet, generateRingPrivateKey};
+    getRingPrivateFromWallet,getRingPublicFromWallet, generateRingPrivateKey,PedersenCommitment};

@@ -207,34 +207,34 @@ def ReceiverTransReceipt(v, RPoint, b):
 def main():
     '''
     Main Application Execution.
-    
+    '''
     print('')
     print("******************* Stealth Address - Python Implementation *********************")
     print('')
-    '''
-    if sys.argv[1] == '1':
-        #   Step 1: Generation of secrets
-        v, b, r = genSecrets()
-        print(v,b,r)
-    elif sys.argv[1] == '2':
-        #   Step 2: Generation of View or Scan public key.
-        S, s = ViewPubKey(v)
-    elif sys.argv[1] == '3':
-        #   Step 3: Generation of Spend public key.
-        B, b = SpendPubKey(b)    
-    elif sys.argv[1] == '4':
-        #   Step 4: One-time secret generation by Transaction Initiator (Alice).
-        R, r = BigRforSender(r)
-    elif sys.argv[1] == '5':
-        #   Step 5: Activation of Diffie-Helman Protocol.
-        VPoint, RPoint = Diffie_HelmanProtocol(S, s, R, r)
-    elif sys.argv[1] == '6':
-        #   Step 6: Creation of Stealth address visible in Blockchain.
-        stealthAddforBlockchain(b, v, RPoint, r, VPoint, B)
-    elif sys.argv[1] == '7':
-        #   Step 7: Transaction receiver retrieves transactions.
-        ReceiverTransReceipt(v, RPoint, b)    
+
+#   Step 1: Generation of secrets
+    v, b, r = genSecrets()
+
+#   Step 2: Generation of View or Scan public key.
+    S, s = ViewPubKey(v)
+
+#   Step 3: Generation of Spend public key.
+    B, b = SpendPubKey(b)
+
+#   Step 4: One-time secret generation by Transaction Initiator (Alice).
+    R, r = BigRforSender(r)
+
+#   Step 5: Activation of Diffie-Helman Protocol.
+    VPoint, RPoint = Diffie_HelmanProtocol(S, s, R, r)
+
+#   Step 6: Creation of Stealth address visible in Blockchain.
+    stealthAddforBlockchain(b, v, RPoint, r, VPoint, B)
+
+#   Step 7: Transaction receiver retrieves transactions.
+    ReceiverTransReceipt(v, RPoint, b)
+    
 
 #   Execution/Run time.
 if __name__ == '__main__':
+    print ("First argument ", sys.argv[0])
     main()
