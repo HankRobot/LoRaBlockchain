@@ -36,13 +36,17 @@ class TxIn {
 }
 
 class TxOut {
-    public address: string;
+    public key: string;
+    public scan: string;
+    public stealthadd: string;
     public amount: number;
     public pedersen: any;
     public secret: any;
 
-    constructor(address: string, amount: number, pedersen:any, secret:any) {
-        this.address = address;
+    constructor(key:string, scan:string, stealthadd:string, amount: number, pedersen:any, secret:any) {
+        this.key = key;
+        this.scan = scan;
+        this.stealthadd = stealthadd;
         this.amount = amount;
         this.pedersen = pedersen;
         this.secret = secret;
@@ -58,11 +62,11 @@ class Transaction {
 
 const getTransactionId = (transaction: Transaction): string => {
     const txInContent: string = transaction.txIns
-        .map((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex)
+        .map((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex + txIn.signaturestring)
         .reduce((a, b) => a + b, '');
 
     const txOutContent: string = transaction.txOuts
-        .map((txOut: TxOut) => txOut.address + txOut.amount)
+        .map((txOut: TxOut) => txOut.key + txOut.amount)
         .reduce((a, b) => a + b, '');
 
     return CryptoJS.SHA256(txInContent + txOutContent).toString();
@@ -95,11 +99,12 @@ const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTx
         .map((txOut) => txOut.amount)
         .reduce((a, b) => (a + b), 0);
 
+    /*    
     if (totalTxOutValues !== totalTxInValues) {
         console.log('totalTxOutValues !== totalTxInValues in tx: ' + transaction.id);
         return false;
     }
-
+    */
     return true;
 };
 
@@ -226,7 +231,7 @@ const findUnspentTxOut = (transactionId: string, index: number, aUnspentTxOuts: 
     return aUnspentTxOuts.find((uTxO) => uTxO.txOutId === transactionId && uTxO.txOutIndex === index);
 };
 
-const getCoinbaseTransaction = (address: string, blockIndex: number): Transaction => {
+const getCoinbaseTransaction = (key: string, scan: string, blockIndex: number): Transaction => {
     const t = new Transaction();
     const txIn: TxIn = new TxIn();
     txIn.signaturestring = '';
@@ -235,7 +240,7 @@ const getCoinbaseTransaction = (address: string, blockIndex: number): Transactio
     txIn.txOutIndex = blockIndex;
 
     t.txIns = [txIn];
-    t.txOuts = [new TxOut(address, 1, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
+    t.txOuts = [new TxOut(key,scan, null, 1, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
     t.id = getTransactionId(t);
     return t;
 };
@@ -274,7 +279,7 @@ const signTxIn = (transaction: Transaction, txInIndex: number,
 const updateUnspentTxOuts = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[]): UnspentTxOut[] => {
     const newUnspentTxOuts: UnspentTxOut[] = aTransactions
         .map((t) => {
-            return t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.address, txOut.amount));
+            return t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.key, txOut.amount));
         })
         .reduce((a, b) => a.concat(b), []);
 
@@ -334,10 +339,10 @@ const isValidTxOutStructure = (txOut: TxOut): boolean => {
     if (txOut == null) {
         console.log('txOut is null');
         return false;
-    } else if (typeof txOut.address !== 'string') {
+    } else if (typeof txOut.key !== 'string') {
         console.log('invalid address type in txOut');
         return false;
-    } else if (!isValidAddress(txOut.address)) {
+    } else if (!isValidAddress(txOut.key)) {
         console.log('invalid TxOut address');
         return false;
     } 
@@ -381,6 +386,7 @@ const isValidTransactionStructure = (transaction: Transaction) => {
 
 // valid address is a valid ecdsa public key in the 04 + X-coordinate + Y-coordinate format
 const isValidAddress = (address: string): boolean => {
+    /*
     if (address.length !== 130) {
         console.log(address);
         console.log('invalid public key length');
@@ -392,6 +398,7 @@ const isValidAddress = (address: string): boolean => {
         console.log('public key must start with 04');
         return false;
     }
+    */
     return true;
 };
 

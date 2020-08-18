@@ -13,6 +13,8 @@
         <div class="ten columns">
           <label for="receiverAddress">Receiver address</label>
           <input v-model="receiverAddress" class="u-full-width" type="text" placeholder="04f72a4541275aeb4344a8b04..." id="receiverAddress">
+          <label for="receiverScan">Receiver scan</label>
+          <input v-model="receiverScan" class="u-full-width" type="text" placeholder="04f72a4541275aeb4344a8b04..." id="receiverScan">
         </div>
         <div class="two columns">
           <label for="amount">Amount</label>
@@ -90,11 +92,12 @@
       },
       sendTransaction: function() {
         this.$http.post('/api/sendTransaction',
-          {'amount' : parseInt(this.receiverAmount), 'address' : this.receiverAddress}
+          {'amount' : parseInt(this.receiverAmount), 'address' : this.receiverAddress, 'scan' : this.receiverScan}
           )
           .then(() => {
             this.receiverAmount = null;
             this.receiverAddress = null;
+            this.receiverScan = null;
             this.init();
           })
       },

@@ -8,7 +8,10 @@
     "compile": "tsc"
   },
   "dependencies": {
+    "@types/bitcoinjs-lib": "^3.3.2",
     "axios": "^0.19.2",
+    "bigi": "^1.4.2",
+    "bitcoinjs-lib": "^3.3.2",
     "bn.js": "^4.11.8",
     "body-parser": "^1.19.0",
     "coinkey": "^3.0.0",
@@ -21,6 +24,7 @@
     "flatted": "^3.0.4",
     "keccak": "^1.4.0",
     "lodash": "^4.17.19",
+    "mathjs": "^7.1.0",
     "python-shell": "^2.0.1",
     "rimraf": "^2.6.2",
     "ring-crypto": "^1.0.8",

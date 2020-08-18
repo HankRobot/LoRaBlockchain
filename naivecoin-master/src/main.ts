@@ -3,7 +3,7 @@ import * as express from 'express';
 import * as _ from 'lodash';
 import {
     Block, generateNextBlock, generatenextBlockWithTransaction, generateRawNextBlock, getAccountBalance,
-    getBlockchain, getMyUnspentTransactionOutputs, getUnspentTxOuts, sendTransaction
+    getBlockchain, getMyUnspentTransactionOutputs, getUnspentTxOuts, sendTransaction, getcoinbasewallet
 } from './blockchain';
 import {connectToPeers, getSockets, initP2PServer} from './p2p';
 import {UnspentTxOut, safeStringify} from './transaction';
@@ -11,7 +11,8 @@ import {getTransactionPool} from './transactionPool';
 import {
     getPublicFromWallet, 
     initWallet,
-    PedersenCommitment} from './wallet';
+    PedersenCommitment,
+    dualkeystealthaddress} from './wallet';
 
 const httpPort: number = parseInt(process.env.HTTP_PORT) || 3001;
 const p2pPort: number = parseInt(process.env.P2P_PORT) || 6001;
@@ -95,9 +96,10 @@ const initHttpServer = (myHttpPort: number) => {
 
     app.post('/mineTransaction', (req, res) => {
         const address = req.body.address;
+        const scan = req.body.scan;
         const amount = req.body.amount;
         try {
-            const resp = generatenextBlockWithTransaction(address, amount);
+            const resp = generatenextBlockWithTransaction(address, scan, amount);
             res.send(resp);
         } catch (e) {
             console.log(e.message);
@@ -108,13 +110,14 @@ const initHttpServer = (myHttpPort: number) => {
     app.post('/sendTransaction', (req, res) => {
         try {
             const address = req.body.address;
+            const scan = req.body.scan;
             const amount = req.body.amount;
             console.log(req.body);
 
-            if (address === undefined || amount === undefined) {
-                throw Error('invalid address or amount');
+            if (address === undefined || amount === undefined || scan === undefined) {
+                throw Error('invalid address or amount or scan');
             }
-            const resp = sendTransaction(address, amount);
+            const resp = sendTransaction(address, scan, amount);
             res.send(safeStringify(resp));
         } catch (e) {
             console.log(e.message);
@@ -148,4 +151,3 @@ const initHttpServer = (myHttpPort: number) => {
 initHttpServer(httpPort);
 initP2PServer(p2pPort);
 initWallet();
-getAccountBalance();

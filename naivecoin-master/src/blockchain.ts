@@ -12,6 +12,7 @@ import {createTransaction, findUnspentTxOuts, getBalance
     } from './wallet';
 import * as Pedersen from 'simple-js-pedersen-commitment'
 import { forEach } from 'lodash';
+import * as bitcoin from 'bitcoinjs-lib'
 
 class Block {
     public index: number;
@@ -34,15 +35,30 @@ class Block {
     }
 }
 
+const getcoinbasewallet = (): any => {
+    /*
+    const privateKey = getPrivateFromWallet();
+    const key = EC.keyFromPrivate(privateKey, 'hex');
+    return key.getPublic().encode('hex');
+    */
+    var recipient: any = bitcoin.ECPair.makeRandom() // private to recipient
+    var scan: any = bitcoin.ECPair.makeRandom()  // private to scanner/recipients
+    //console.log(recipient.Q.getEncoded().toString('hex'))
+    //console.log(scan.Q.getEncoded().toString('hex'))
+    return [recipient.Q.getEncoded().toString('hex'), scan.Q.getEncoded().toString('hex')];
+};
+
 const genesisTransaction = {
     'txIns': [{'signaturestring': '', 'signature': null, 'txOutId': '', 'txOutIndex': 0}],
     'txOuts': [{
-        'address': '04bfcab8722991ae774db48f934ca79cfb7dd991229153b9f732ba5334aafcd8e7266e47076996b55a14bf9913ee3145ce0cfc1372ada8ada74bd287450313534a',
+        'key': '0271dab5327f81cd36d710eaac1e1166df2678decad8e87d170c6a6e4fd441f6fe',
+        'scan' : '02f117f201530e78fc7e997694f69c6a15c3866743c4ec385fb07fc713946059b9',
+        'stealthadd' : null,
         'amount': 50,
         'pedersen': null,
         'secret': null
     }],
-    'id': 'e655f6a5f26dc9b4cac6e46f52336428287759cf81ef5ff10854f69d68f43fa3'
+    'id': '5d1564cefe88d678e912f004aca15af3df1b20db05c4a931df9cf43759517556'
 };
 
 const genesisBlock: Block = new Block(
@@ -117,20 +133,20 @@ const getMyUnspentTransactionOutputs = () => {
 };
 
 const generateNextBlock = () => {
-    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
+    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet()[0],getPublicFromWallet()[1], getLatestBlock().index + 1);
     const blockData: Transaction[] = [coinbaseTx].concat(getTransactionPool());
     return generateRawNextBlock(blockData);
 };
 
-const generatenextBlockWithTransaction = (receiverAddress: string, amount: number) => {
+const generatenextBlockWithTransaction = (receiverAddress: string, receiverScan: string, amount: number) => {
     if (!isValidAddress(receiverAddress)) {
         throw Error('invalid address');
     }
     if (typeof amount !== 'number') {
         throw Error('invalid amount');
     }
-    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet(), getLatestBlock().index + 1);
-    const tx: Transaction = createTransaction(receiverAddress, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
+    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet()[0], getPublicFromWallet()[1], getLatestBlock().index + 1);
+    const tx: Transaction = createTransaction(receiverAddress, receiverScan, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
     const blockData: Transaction[] = [coinbaseTx, tx];
     return generateRawNextBlock(blockData);
 };
@@ -158,7 +174,7 @@ const getAccountBalance = (): number => {
     getBlockchain().forEach(block => {
         block.data.forEach(data=>{
             //get txouts with both sender and receiver, where u are the sender
-            if (data.txOuts.length > 1 && data.txOuts[1].address == getPublicFromWallet()) {
+            if (data.txOuts.length > 1 && data.txOuts[1].key == getPublicFromWallet()[0] && data.txOuts[1].scan == getPublicFromWallet()[1]) {
                 while (!pederson.verify(amount.toString(), [data.txOuts[0].pedersen], data.txOuts[0].secret)) {
                     amount++;
                 }
@@ -166,15 +182,15 @@ const getAccountBalance = (): number => {
                 amount = 0;
             }
             //if you are the receiver
-            if (data.txOuts.length > 1 && data.txOuts[0].address == getPublicFromWallet()) {
+            if (data.txOuts.length > 1 && data.txOuts[0].key == getPublicFromWallet()[0] && data.txOuts[0].scan == getPublicFromWallet()[1]) {
                 while (!pederson.verify(amount.toString(), [data.txOuts[0].pedersen], data.txOuts[0].secret)) {
                     amount++;
                 }
                 totalamount += amount;
                 amount = 0;
             }
-
-            const coinbasetxouts = data.txOuts.filter((uTxO: TxOut) => (uTxO.address === getPublicFromWallet() && data.txOuts.length===1));
+            //get coinbase transactions
+            const coinbasetxouts = data.txOuts.filter((uTxO: TxOut) => (uTxO.key === getPublicFromWallet()[0] && uTxO.scan === getPublicFromWallet()[1] && data.txOuts.length===1));
             coinbasetxouts.forEach(txout => {
                 pedersenlist.push(txout.pedersen);
                 coinamount = 0;
@@ -190,14 +206,12 @@ const getAccountBalance = (): number => {
     });
     
     totalamount += coinamount;
-    console.log("Your public wallet", getPublicFromWallet())
-    console.log("Your amount", totalamount);
     return totalamount;
     //return getBalance(getPublicFromWallet(), getUnspentTxOuts());
 };
 
-const sendTransaction = (address: string, amount: number): Transaction => {
-    const tx: Transaction = createTransaction(address, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
+const sendTransaction = (address: string, scan: string, amount: number): Transaction => {
+    const tx: Transaction = createTransaction(address, scan, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
     addToTransactionPool(tx, getUnspentTxOuts());
     console.log("Pass");
     broadCastTransactionPool();
@@ -349,5 +363,5 @@ export {
     Block, getBlockchain, getUnspentTxOuts, getLatestBlock, sendTransaction,
     generateRawNextBlock, generateNextBlock, generatenextBlockWithTransaction,
     handleReceivedTransaction, getMyUnspentTransactionOutputs,
-    getAccountBalance, isValidBlockStructure, replaceChain, addBlockToChain
+    getAccountBalance, isValidBlockStructure, replaceChain, addBlockToChain, getcoinbasewallet
     }
