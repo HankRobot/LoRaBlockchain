@@ -8,7 +8,7 @@ import {
 import {addToTransactionPool, getTransactionPool, updateTransactionPool} from './transactionPool';
 import {hexToBinary} from './util';
 import {createTransaction, findUnspentTxOuts, getBalance
-    , getPrivateFromWallet, getPublicFromWallet
+    , getPrivateFromWallet, getPublicFromWallet, stealthDualSend
     } from './wallet';
 import * as Pedersen from 'simple-js-pedersen-commitment'
 import { forEach } from 'lodash';
@@ -43,7 +43,8 @@ const getcoinbasewallet = (): any => {
     */
     var recipient: any = bitcoin.ECPair.makeRandom() // private to recipient
     var scan: any = bitcoin.ECPair.makeRandom()  // private to scanner/recipients
-    //console.log(recipient.Q.getEncoded().toString('hex'))
+    var forselfstealthaddress = stealthDualSend(recipient.d,recipient.Q,scan.Q)
+    console.log(forselfstealthaddress.getAddress().toString());
     //console.log(scan.Q.getEncoded().toString('hex'))
     return [recipient.Q.getEncoded().toString('hex'), scan.Q.getEncoded().toString('hex')];
 };
@@ -51,14 +52,13 @@ const getcoinbasewallet = (): any => {
 const genesisTransaction = {
     'txIns': [{'signaturestring': '', 'signature': null, 'txOutId': '', 'txOutIndex': 0}],
     'txOuts': [{
-        'key': '0271dab5327f81cd36d710eaac1e1166df2678decad8e87d170c6a6e4fd441f6fe',
-        'scan' : '02f117f201530e78fc7e997694f69c6a15c3866743c4ec385fb07fc713946059b9',
-        'stealthadd' : null,
+        'nounce': '0271dab5327f81cd36d710eaac1e1166df2678decad8e87d170c6a6e4fd441f6fe',
+        'stealthadd' : "19cVJV9fHEg7nGmUeQE8nPknPRYn7oJXYT",
         'amount': 50,
         'pedersen': null,
         'secret': null
     }],
-    'id': '5d1564cefe88d678e912f004aca15af3df1b20db05c4a931df9cf43759517556'
+    'id': 'fd1b577866f976ed9c311700a461877d08fa1ffa80cca7a4bf14e9f6581cfaaa'
 };
 
 const genesisBlock: Block = new Block(
@@ -133,7 +133,7 @@ const getMyUnspentTransactionOutputs = () => {
 };
 
 const generateNextBlock = () => {
-    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet()[0],getPublicFromWallet()[1], getLatestBlock().index + 1);
+    const coinbaseTx: Transaction = getCoinbaseTransaction(getLatestBlock().index + 1);
     const blockData: Transaction[] = [coinbaseTx].concat(getTransactionPool());
     return generateRawNextBlock(blockData);
 };
@@ -145,7 +145,7 @@ const generatenextBlockWithTransaction = (receiverAddress: string, receiverScan:
     if (typeof amount !== 'number') {
         throw Error('invalid amount');
     }
-    const coinbaseTx: Transaction = getCoinbaseTransaction(getPublicFromWallet()[0], getPublicFromWallet()[1], getLatestBlock().index + 1);
+    const coinbaseTx: Transaction = getCoinbaseTransaction(getLatestBlock().index + 1);
     const tx: Transaction = createTransaction(receiverAddress, receiverScan, amount, getPrivateFromWallet(), getUnspentTxOuts(), getTransactionPool());
     const blockData: Transaction[] = [coinbaseTx, tx];
     return generateRawNextBlock(blockData);
@@ -173,24 +173,27 @@ const getAccountBalance = (): number => {
     let pedersenlist:Array<any> = [];
     getBlockchain().forEach(block => {
         block.data.forEach(data=>{
+            console.log('a')
             //get txouts with both sender and receiver, where u are the sender
-            if (data.txOuts.length > 1 && data.txOuts[1].key == getPublicFromWallet()[0] && data.txOuts[1].scan == getPublicFromWallet()[1]) {
+            if (data.txOuts.length > 1 && data.txOuts[1].nounce == getPublicFromWallet()[0]) {
                 while (!pederson.verify(amount.toString(), [data.txOuts[0].pedersen], data.txOuts[0].secret)) {
                     amount++;
                 }
                 totalamount -= amount;
                 amount = 0;
             }
+            console.log('b')
             //if you are the receiver
-            if (data.txOuts.length > 1 && data.txOuts[0].key == getPublicFromWallet()[0] && data.txOuts[0].scan == getPublicFromWallet()[1]) {
+            if (data.txOuts.length > 1 && data.txOuts[0].nounce == getPublicFromWallet()[0]) {
                 while (!pederson.verify(amount.toString(), [data.txOuts[0].pedersen], data.txOuts[0].secret)) {
                     amount++;
                 }
                 totalamount += amount;
                 amount = 0;
             }
+            console.log('c')
             //get coinbase transactions
-            const coinbasetxouts = data.txOuts.filter((uTxO: TxOut) => (uTxO.key === getPublicFromWallet()[0] && uTxO.scan === getPublicFromWallet()[1] && data.txOuts.length===1));
+            const coinbasetxouts = data.txOuts.filter((uTxO: TxOut) => (uTxO.nounce === getPublicFromWallet()[0] && data.txOuts.length===1));
             coinbasetxouts.forEach(txout => {
                 pedersenlist.push(txout.pedersen);
                 coinamount = 0;
@@ -202,6 +205,7 @@ const getAccountBalance = (): number => {
                     amount = 0;
                 });   
             });
+            console.log('d')
         });
     });
     

@@ -6,13 +6,21 @@ import * as util from 'util' // has no default export
 const {parse, stringify} = require('flatted/cjs');
 const COINBASE_AMOUNT: number = 50;
 
+
 import {Hasher} from './lib/hasher';
 import {PrivateKey} from './lib/private-key';
 import {PublicKey} from './lib/public-key';
 import {Prng} from './lib/prng';
 import {Signature} from './lib/signature';
 import { //getPublicFromWallet, getPrivateFromWallet, 
-    getRingPrivateFromWallet, getRingPublicFromWallet, PedersenCommitment} from './wallet';
+    getRingPrivateFromWallet, getRingPublicFromWallet, PedersenCommitment, getPublicFromWallet, stealthDualSend} from './wallet';
+
+import * as ecurve from 'ecurve'
+import * as bigi from 'bigi'
+var secp256k1 = ecurve.getCurveByName('secp256k1')
+var G = secp256k1.G
+var n = secp256k1.n
+    
 
 class UnspentTxOut {
     public readonly txOutId: string;
@@ -36,16 +44,14 @@ class TxIn {
 }
 
 class TxOut {
-    public key: string;
-    public scan: string;
+    public nounce: string;
     public stealthadd: string;
     public amount: number;
     public pedersen: any;
     public secret: any;
 
-    constructor(key:string, scan:string, stealthadd:string, amount: number, pedersen:any, secret:any) {
-        this.key = key;
-        this.scan = scan;
+    constructor(nounce:string, stealthadd:string, amount: number, pedersen:any, secret:any) {
+        this.nounce = nounce;
         this.stealthadd = stealthadd;
         this.amount = amount;
         this.pedersen = pedersen;
@@ -66,9 +72,9 @@ const getTransactionId = (transaction: Transaction): string => {
         .reduce((a, b) => a + b, '');
 
     const txOutContent: string = transaction.txOuts
-        .map((txOut: TxOut) => txOut.key + txOut.amount)
+        .map((txOut: TxOut) => txOut.nounce + txOut.stealthadd + txOut.amount + txOut.pedersen + txOut.secret)
         .reduce((a, b) => a + b, '');
-
+    //console.log("Transaction ID",CryptoJS.SHA256(txInContent + txOutContent).toString())
     return CryptoJS.SHA256(txInContent + txOutContent).toString();
 };
 
@@ -231,16 +237,19 @@ const findUnspentTxOut = (transactionId: string, index: number, aUnspentTxOuts: 
     return aUnspentTxOuts.find((uTxO) => uTxO.txOutId === transactionId && uTxO.txOutIndex === index);
 };
 
-const getCoinbaseTransaction = (key: string, scan: string, blockIndex: number): Transaction => {
+const getCoinbaseTransaction = (blockIndex: number): Transaction => {
     const t = new Transaction();
     const txIn: TxIn = new TxIn();
     txIn.signaturestring = '';
     txIn.signature = null;
     txIn.txOutId = '';
     txIn.txOutIndex = blockIndex;
-
+    var forselfstealthaddress = stealthDualSend(bigi.fromHex(getPublicFromWallet()[2]),
+                                                ecurve.Point.decodeFrom(secp256k1,Buffer.from(getPublicFromWallet()[0], "hex")), 
+                                                ecurve.Point.decodeFrom(secp256k1,Buffer.from(getPublicFromWallet()[1], "hex"))
+                                );
     t.txIns = [txIn];
-    t.txOuts = [new TxOut(key,scan, null, 1, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
+    t.txOuts = [new TxOut(getPublicFromWallet()[0], forselfstealthaddress.getAddress().toString(), 1, PedersenCommitment(COINBASE_AMOUNT)[0], PedersenCommitment(COINBASE_AMOUNT)[1])];
     t.id = getTransactionId(t);
     return t;
 };
@@ -279,7 +288,7 @@ const signTxIn = (transaction: Transaction, txInIndex: number,
 const updateUnspentTxOuts = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[]): UnspentTxOut[] => {
     const newUnspentTxOuts: UnspentTxOut[] = aTransactions
         .map((t) => {
-            return t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.key, txOut.amount));
+            return t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.nounce, txOut.amount));
         })
         .reduce((a, b) => a.concat(b), []);
 
@@ -339,10 +348,10 @@ const isValidTxOutStructure = (txOut: TxOut): boolean => {
     if (txOut == null) {
         console.log('txOut is null');
         return false;
-    } else if (typeof txOut.key !== 'string') {
+    } else if (typeof txOut.nounce !== 'string') {
         console.log('invalid address type in txOut');
         return false;
-    } else if (!isValidAddress(txOut.key)) {
+    } else if (!isValidAddress(txOut.nounce)) {
         console.log('invalid TxOut address');
         return false;
     } 

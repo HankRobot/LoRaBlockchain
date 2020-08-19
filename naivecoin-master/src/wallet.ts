@@ -140,7 +140,7 @@ const getPublicFromWallet = (): any => {
     */
     var recipient: any = bitcoin.ECPair.fromWIF('5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss') // private to recipient
     var scan: any = bitcoin.ECPair.fromWIF('L5DkCk3xLLoGKncqKsWQTdaPSR4V8gzc14WVghysQGkdryRudjBM') // private to scanner/recipient
-    return [recipient.Q.getEncoded().toString('hex'), scan.Q.getEncoded().toString('hex')];
+    return [recipient.Q.getEncoded().toString('hex'), scan.Q.getEncoded().toString('hex'), recipient.d.toHex()];
 };
 
 const generatePrivateKey = (): string => {
@@ -191,12 +191,17 @@ const findTxOutsForAmount = (amount: number) => {
     throw Error(eMsg);
 };
 
-const createTxOuts = (receiverAddress: any, scanAddress:any, stealthaddress: string, amount, leftOverAmount: number) => {
-    const txOut1: TxOut = new TxOut(receiverAddress, scanAddress, stealthaddress, 0, PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
+const createTxOuts = (nonce: any, stealthaddress: string,  amount, leftOverAmount: number) => {
+    const txOut1: TxOut = new TxOut(nonce.Q.getEncoded().toString('hex'), stealthaddress, 0, PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
     if (leftOverAmount === 0) {
         return [txOut1];
     } else {
-        const leftOverTx = new TxOut(receiverAddress, scanAddress, stealthaddress, 1, PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
+        //create a stealth address for leftoveramount
+        var forselfstealthaddress = stealthDualSend(bigi.fromHex(getPublicFromWallet()[2]), 
+                                                    ecurve.Point.decodeFrom(secp256k1,Buffer.from(getPublicFromWallet()[0], "hex")), 
+                                                    ecurve.Point.decodeFrom(secp256k1,Buffer.from(getPublicFromWallet()[1], "hex"))
+                                                    );
+        const leftOverTx = new TxOut(getPublicFromWallet()[0], forselfstealthaddress.getAddress().toString(), 1, PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
         return [txOut1, leftOverTx];
     }
 };
@@ -222,7 +227,7 @@ const createTransaction = (receiverAddress: string, receiverScan:string, amount:
     var nonce: any = bitcoin.ECPair.fromWIF('KxVqB96pxbw1pokzQrZkQbLfVBjjHFfp2mFfEp8wuEyGenLFJhM9') // private to sender
     var forSender = stealthDualSend(nonce.d, receiver,scan)
     console.log(3);
-    tx.txOuts = createTxOuts(receiverAddress, receiverScan, forSender.getAddress().toString(), amount, leftOverAmount);
+    tx.txOuts = createTxOuts(nonce, forSender.getAddress().toString(), amount, leftOverAmount);
     console.log(4);
     tx.id = getTransactionId(tx);
 
@@ -239,5 +244,5 @@ const createTransaction = (receiverAddress: string, receiverScan:string, amount:
 export {
     createTransaction, getPublicFromWallet,
     getPrivateFromWallet, getBalance, generatePrivateKey, initWallet, deleteWallet, findUnspentTxOuts,
-    getRingPrivateFromWallet, getRingPublicFromWallet, generateRingPrivateKey, PedersenCommitment, dualkeystealthaddress
+    getRingPrivateFromWallet, getRingPublicFromWallet, generateRingPrivateKey, PedersenCommitment, dualkeystealthaddress, stealthDualSend
 };

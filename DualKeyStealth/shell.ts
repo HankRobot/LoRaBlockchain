@@ -62,26 +62,26 @@ console.log("Receiver public keys", recipient.Q.getEncoded().toString('hex'));
 console.log("Receiver scan key", scan.Q.toString())
 // ... recipient reveals public key(s) (recipient.Q, scan.Q) to sender
 var test = recipient.Q.getEncoded().toString('hex');
-console.log("Test", test)
+//console.log("Test", test)
 
-var forSender = stealthDualSend(nonce.d,  ecurve.Point.decodeFrom(secp256k1,Buffer.from(test,"hex")), scan.Q)
-
-
+var forSender = stealthDualSend(bigi.fromHex(recipient.d.toHex()),  ecurve.Point.decodeFrom(secp256k1,Buffer.from(test,"hex")), scan.Q)
 
 //var forSender = stealthDualSend(nonce.d, ecurve.Point.decodeFrom(secp256k1,recipient.Q.getEncoded()), scan.Q)
-console.log("Transaction address", forSender.getAddress())
+console.log("recipient d before hex conversion:", recipient.d)
+console.log("recipient d after hex conversion:", recipient.d.toHex())
+console.log("recipient d retrieved", bigi.fromHex(recipient.d.toHex()))
 //create the address for the receiver the check later, then the forrecipient will try to generate and check if its the same address
 
 
 //assert.throws(function () { forSender.toWIF() }, /Error: Missing private key/)
 
 // ... sender reveals nonce public key (nonce.Q) to scanner
-var forScanner = stealthDualScan(scan.d, recipient.Q, nonce.Q)
+var forScanner = stealthDualScan(scan.d, recipient.Q, recipient.Q)
 //assert.throws(function () { forScanner.toWIF() }, /Error: Missing private key/)
 
 // ... scanner reveals relevant transaction + nonce public key (nonce.Q) to recipient
 
-var forRecipient = stealthDualReceive(scan.d, recipient.d, nonce.Q)
+var forRecipient = stealthDualReceive(scan.d, recipient.d, recipient.Q)
 if (forSender.getAddress()===forRecipient.getAddress()) {
   console.log("Use this private key for the money", forRecipient.toWIF());
 }
