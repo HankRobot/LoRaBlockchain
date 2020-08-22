@@ -50,7 +50,7 @@ const initHttpServer = (myHttpPort: number) => {
 
     app.get('/address/:address', (req, res) => {
         const unspentTxOuts: UnspentTxOut[] =
-            _.filter(getUnspentTxOuts(), (uTxO) => uTxO.address === req.params.address);
+            _.filter(getUnspentTxOuts(), (uTxO) => uTxO.stealthaddress === req.params.address);
         res.send({'unspentTxOuts': unspentTxOuts});
     });
 

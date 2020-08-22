@@ -25,13 +25,17 @@ var n = secp256k1.n
 class UnspentTxOut {
     public readonly txOutId: string;
     public readonly txOutIndex: number;
-    public readonly address: string;
+    public readonly stealthaddress: string;
     public readonly amount: number;
+    public readonly pedersen: any;
+    public readonly secret: any;
 
-    constructor(txOutId: string, txOutIndex: number, address: string, amount: number) {
+    constructor(txOutId: string, txOutIndex: number, stealthaddress: string, amount: number, pedersen:any, secret:any) {
         this.txOutId = txOutId;
         this.txOutIndex = txOutIndex;
-        this.address = address;
+        this.pedersen = pedersen;
+        this.secret = secret;
+        this.stealthaddress = stealthaddress;
         this.amount = amount;
     }
 }
@@ -68,13 +72,13 @@ class Transaction {
 
 const getTransactionId = (transaction: Transaction): string => {
     const txInContent: string = transaction.txIns
-        .map((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex + txIn.signaturestring)
+        .map((txIn: TxIn) => txIn.txOutId + txIn.txOutIndex)
         .reduce((a, b) => a + b, '');
 
     const txOutContent: string = transaction.txOuts
         .map((txOut: TxOut) => txOut.nounce + txOut.stealthadd + txOut.amount + txOut.pedersen + txOut.secret)
         .reduce((a, b) => a + b, '');
-    //console.log("Transaction ID",CryptoJS.SHA256(txInContent + txOutContent).toString())
+    console.log("Correct Transaction ID",CryptoJS.SHA256(txInContent + txOutContent).toString())
     return CryptoJS.SHA256(txInContent + txOutContent).toString();
 };
 
@@ -209,7 +213,7 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
         console.log('referenced txOut not found: ' + safeStringify(txIn));
         return false;
     }
-    const address = referencedUTxOut.address;
+    const address = referencedUTxOut.stealthaddress;
     
     const hasher = new Hasher();
     const key = new PrivateKey(getRingPrivateFromWallet()[0],hasher);
@@ -223,7 +227,7 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
     //const validSignature: boolean = true;//txIn.signature.verify(transaction.id,txIn.signature.public_keys);
     txIn.signature = null;
     if (!validSignature) {
-        console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUTxOut.address);
+        console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUTxOut.stealthaddress);
         return false;
     }
     return true;
@@ -264,7 +268,7 @@ const signTxIn = (transaction: Transaction, txInIndex: number,
         console.log('could not find referenced txOut');
         throw Error();
     }
-    const referencedAddress = referencedUnspentTxOut.address;
+    const referencedAddress = referencedUnspentTxOut.stealthaddress;
     /*
     if (getPublicKey(privateKey) !== referencedAddress) {
         console.log('trying to sign an input with private' +
@@ -288,14 +292,14 @@ const signTxIn = (transaction: Transaction, txInIndex: number,
 const updateUnspentTxOuts = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[]): UnspentTxOut[] => {
     const newUnspentTxOuts: UnspentTxOut[] = aTransactions
         .map((t) => {
-            return t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.nounce, txOut.amount));
+            return t.txOuts.map((txOut, index) => new UnspentTxOut(t.id, index, txOut.stealthadd, txOut.amount, txOut.pedersen, txOut.secret));
         })
         .reduce((a, b) => a.concat(b), []);
 
     const consumedTxOuts: UnspentTxOut[] = aTransactions
         .map((t) => t.txIns)
         .reduce((a, b) => a.concat(b), [])
-        .map((txIn) => new UnspentTxOut(txIn.txOutId, txIn.txOutIndex, '', 0));
+        .map((txIn) => new UnspentTxOut(txIn.txOutId, txIn.txOutIndex, '', 0, null, null));
 
     const resultingUnspentTxOuts = aUnspentTxOuts
         .filter(((uTxO) => !findUnspentTxOut(uTxO.txOutId, uTxO.txOutIndex, consumedTxOuts)))
