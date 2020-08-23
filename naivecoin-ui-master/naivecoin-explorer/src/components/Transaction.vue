@@ -5,15 +5,18 @@
     <h4>Total amount: {{ totalValue(transaction) }}</h4>
     <h5>TxIns</h5>
     <div class="txIn break-word" v-for="txIn in transaction.txIns">
-      <div class="row bold" v-if="txIn.signature ===''">Coinbase transaction</div>
+      <div class="row bold" v-if="txIn.signaturestring ===''">Coinbase transaction</div>
       <div class="row">TxOutId: <router-link :to="{ name: 'Transaction', params: {id: txIn.txOutId }}"> <span>{{ txIn.txOutId }}</span></router-link></div>
       <div class="row">TxOutIndex:  {{ txIn.txOutIndex }}</div>
-      <div class="row">Signature: {{ txIn.signature }}</div>
+      <div class="row">Signature: {{ txIn.signaturestring }}</div>
     </div>
     <h5>TxOuts</h5>
     <div class="txIn break-word" v-for="txOut in transaction.txOuts">
-      <div class="row">Address: <router-link :to="{ name: 'Address', params: {address: txOut.address}}"> <span>{{ txOut.address }}</span></router-link> </div>
+      <div class="row">Stealth Address: <router-link :to="{ name: 'Address', params: {address: txOut.stealthadd}}"> <span>{{ txOut.stealthadd }}</span></router-link> </div>
+      <div class="row">Sender Nounce: {{ txOut.nounce}}</div>
       <div class="row">Amount: {{ txOut.amount}}</div>
+      <div class="row">Pedersen: {{ txOut.pedersen}}</div>
+      <div class="row">Secret: {{ txOut.secret}}</div>
     </div>
   </div>
 </template>

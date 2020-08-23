@@ -34,14 +34,19 @@
     <h3>Transactions</h3>
     <div class="transaction" v-for="tx in block.data">
       <div class="row">
+        <span>Transaction Id -> </span>
         <router-link :to="{ name: 'Transaction', params: { id: tx.id }}"> <span >{{ tx.id }}</span></router-link>
 
       </div>
       <div class="row">
         <div class="five columns">
           <div v-for="txIn in tx.txIns">
-            <div v-if="txIn.signature === ''">coinbase</div>
-            <div class="break-word" v-else>{{ txIn.txOutId }} {{ txIn.txOutIndex }}</div>
+            <div v-if="txIn.signaturestring === ''">coinbase</div>
+            <div class="break-word" v-else>
+              <div class="row">TxOutId: {{ txIn.txOutId}}</div>
+              <div class="row">TxOutIndex: {{ txIn.txOutIndex}}</div>
+              <div class="row">Signature: {{ txIn.signaturestring}}</div>
+            </div>
           </div>
         </div>
         <div class="one columns">
@@ -49,9 +54,14 @@
         </div>
         <div class="six columns">
           <div class="row" v-for="txOut in tx.txOuts">
-            <div class="break-word"><router-link :to="{ name: 'Address', params: {address: txOut.address}}">
-              <span>{{ txOut.address }}</span>
-            </router-link>  amount: {{ txOut.amount}} </div>
+            <div class="break-word">
+              <span>Stealth Address: </span>
+              <router-link :to="{ name: 'Stealth Address', params: { id: txOut.stealthadd }}"> <span >{{ txOut.stealthadd }}</span></router-link>
+              <div class="row">Sender Nounce: {{ txOut.nounce}}</div>
+              <div class="row">Amount: {{ txOut.amount}}</div>
+              <div class="row">Pedersen: {{ txOut.pedersen}}</div>
+              <div class="row">Secret: {{ txOut.secret}}</div>
+            </div>
           </div>
         </div>
       </div>

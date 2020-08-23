@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div class="container"><h1><a class="header-link" href="/">Naivecoin blockchain explorer</a></h1>
+    <div class="container"><h1><a class="header-link" href="/">Anonymous blockchain explorer</a></h1>
       <router-view :key="$route.fullPath"/></div>
   </div>
 </template>
