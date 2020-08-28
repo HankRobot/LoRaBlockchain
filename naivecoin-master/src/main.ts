@@ -32,12 +32,12 @@ const initHttpServer = (myHttpPort: number) => {
     });
     
     app.get('/blocks', (req, res) => {
-        res.send(getBlockchain());
+        res.send(safeStringify(getBlockchain()));
     });
 
     app.get('/block/:hash', (req, res) => {
         const block = _.find(getBlockchain(), {'hash' : req.params.hash});
-        res.send(block);
+        res.send(safeStringify(block));
     });
 
     app.get('/transaction/:id', (req, res) => {
@@ -45,7 +45,7 @@ const initHttpServer = (myHttpPort: number) => {
             .map((blocks) => blocks.data)
             .flatten()
             .find({'id': req.params.id});
-        res.send(tx);
+        res.send(safeStringify(tx));
     });
 
     app.get('/address/:address', (req, res) => {
@@ -71,7 +71,7 @@ const initHttpServer = (myHttpPort: number) => {
         if (newBlock === null) {
             res.status(400).send('could not generate block');
         } else {
-            res.send(newBlock);
+            res.send(safeStringify(newBlock));
         }
     });
 
@@ -80,7 +80,7 @@ const initHttpServer = (myHttpPort: number) => {
         if (newBlock === null) {
             res.status(400).send('could not generate block');
         } else {
-            res.send(newBlock);
+            res.send(safeStringify(newBlock));
         }
     });
 
@@ -126,7 +126,7 @@ const initHttpServer = (myHttpPort: number) => {
     });
 
     app.get('/transactionPool', (req, res) => {
-        res.send(getTransactionPool());
+        res.send(safeStringify(getTransactionPool()));
     });
 
     app.get('/peers', (req, res) => {

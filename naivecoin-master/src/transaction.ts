@@ -3,9 +3,8 @@ import * as ecdsa from 'elliptic';
 import * as _ from 'lodash';
 const ec = new ecdsa.ec('secp256k1');
 import * as util from 'util' // has no default export
-const {parse, stringify} = require('flatted/cjs');
 const COINBASE_AMOUNT: number = 50;
-
+import {parse, stringify} from 'flatted';
 
 import {Hasher} from './lib/hasher';
 import {PrivateKey} from './lib/private-key';
@@ -43,7 +42,7 @@ class UnspentTxOut {
 class TxIn {
     public txOutId: string;
     public txOutIndex: number;
-    public signature: Signature;
+    public signature: any;
     public signaturestring: string;
 }
 
@@ -118,6 +117,19 @@ const validateTransaction = (transaction: Transaction, aUnspentTxOuts: UnspentTx
     return true;
 };
 
+const getCircularReplacer = () => {
+    const seen = new WeakSet();
+    return (key, value) => {
+      if (typeof value === "object" && value !== null) {
+        if (seen.has(value)) {
+          return;
+        }
+        seen.add(value);
+      }
+      return value;
+    };
+};
+
 const safeStringify = (obj, indent = 2) => {
     /*
     let cache = [];
@@ -135,7 +147,8 @@ const safeStringify = (obj, indent = 2) => {
     return retVal;
     */
    //return util.inspect(obj);
-   return stringify(obj);
+   return JSON.stringify(obj,getCircularReplacer())
+   //return stringify(obj);
 };
 
 const validateBlockTransactions = (aTransactions: Transaction[], aUnspentTxOuts: UnspentTxOut[], blockIndex: number): boolean => {
@@ -218,14 +231,15 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
     const hasher = new Hasher();
     const key = new PrivateKey(getRingPrivateFromWallet()[0],hasher);
     const foreign_keys = getRingPublicFromWallet();
-    const signature = key.sign(transaction.id,foreign_keys);
+    //const signature = key.sign(transaction.id,foreign_keys);
+    const signature:Signature = txIn.signature;
     const validSignature: boolean = signature.verify(transaction.id,signature.public_keys)// && signature.getc_summation() == txIn.signaturestring ;
     
     //const validSignature: boolean = txIn.signature.verify(transaction.id,txIn.signature.public_keys)
     //const key = ec.keyFromPublic(address, 'hex');
     //const validSignature: boolean = key.verify(transaction.id, txIn.signature);
     //const validSignature: boolean = true;//txIn.signature.verify(transaction.id,txIn.signature.public_keys);
-    txIn.signature = null;
+    //txIn.signature = null;
     if (!validSignature) {
         console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUTxOut.stealthaddress);
         return false;

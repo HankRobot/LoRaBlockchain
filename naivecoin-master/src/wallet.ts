@@ -181,15 +181,6 @@ const findUnspentTxOuts = (ownerAddress: string, unspentTxOuts: UnspentTxOut[]) 
 };
 
 const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) => {
-    /*
-    let currentAmount = 0;
-    currentAmount = getAccountBalance();
-    console.log("Current Amount", currentAmount);
-    if (currentAmount >= amount) {
-        const leftOverAmount = currentAmount - amount;
-        return leftOverAmount;
-    }
-    */
     const pederson = new Pedersen(
         '925f15d93a513b441a78826069b4580e3ee37fc5',
         '959144013c88c9782d5edd2d12f54885aa4ba687'
@@ -217,7 +208,8 @@ const findTxOutsForAmount = (amount: number, myUnspentTxOuts: UnspentTxOut[]) =>
 };
 
 const createTxOuts = (nonce: any, stealthaddress: string, amount, leftOverAmount: number) => {
-    const txOut1: TxOut = new TxOut(nonce.Q.getEncoded().toString('hex'), stealthaddress, 0, PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
+    const txOut1: TxOut = new TxOut(nonce.Q.getEncoded().toString('hex'), stealthaddress, 0,
+     PedersenCommitment(amount)[0], PedersenCommitment(amount)[1]);
     if (leftOverAmount === 0) {
         return [txOut1];
     } else {
@@ -226,7 +218,8 @@ const createTxOuts = (nonce: any, stealthaddress: string, amount, leftOverAmount
             ecurve.Point.decodeFrom(secp256k1, Buffer.from(getPublicFromWallet()[0], "hex")),
             ecurve.Point.decodeFrom(secp256k1, Buffer.from(getPublicFromWallet()[1], "hex"))
         );
-        const leftOverTx = new TxOut(getPublicFromWallet()[0], forselfstealthaddress.getAddress().toString(), 1, PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
+        const leftOverTx = new TxOut(getPublicFromWallet()[0], forselfstealthaddress.getAddress().toString(), 1,
+         PedersenCommitment(leftOverAmount)[0], PedersenCommitment(leftOverAmount)[1]);
         return [txOut1, leftOverTx];
     }
 };

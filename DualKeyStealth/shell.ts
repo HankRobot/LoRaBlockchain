@@ -1,22 +1,3 @@
-import { PythonShell } from 'python-shell';
-
-/*
-let options: any = {
-  mode: 'text',
-  pythonPath: 'C:/Users/Hank Bot/Anaconda3/python.exe',
-  pythonOptions: ['-u'], // get print results in real-time
-  args: ['1']
-};
-
-let v: any;
-let b: any;
-let c: any;
-
-PythonShell.run('my_script.py', options, function (err, results) {
-  if (err) throw err;
-  console.log(results)
-});
-*/
 import * as bigi from 'bigi'
 import * as ecurve from 'ecurve'
 import * as bitcoin from 'bitcoinjs-lib'
@@ -58,30 +39,13 @@ function stealthDualReceive (d, r, eG) {
 var recipient:any = bitcoin.ECPair.fromWIF('5KYZdUEo39z3FPrtuX2QbbwGnNP5zTd7yyr2SC1j299sBCnWjss') // private to recipient
 var scan:any = bitcoin.ECPair.fromWIF('L5DkCk3xLLoGKncqKsWQTdaPSR4V8gzc14WVghysQGkdryRudjBM') // private to scanner/recipient
 var nonce:any = bitcoin.ECPair.fromWIF('KxVqB96pxbw1pokzQrZkQbLfVBjjHFfp2mFfEp8wuEyGenLFJhM9') // private to sender
-console.log("Receiver public keys", recipient.Q.getEncoded().toString('hex'));
-console.log("Receiver scan key", scan.Q.toString())
-// ... recipient reveals public key(s) (recipient.Q, scan.Q) to sender
-var test = recipient.Q.getEncoded().toString('hex');
-//console.log("Test", test)
 
-var forSender = stealthDualSend(bigi.fromHex(recipient.d.toHex()),  ecurve.Point.decodeFrom(secp256k1,Buffer.from(test,"hex")), scan.Q)
+var forSender = stealthDualSend(nonce.d, recipient.Q, scan.Q)
 
-//var forSender = stealthDualSend(nonce.d, ecurve.Point.decodeFrom(secp256k1,recipient.Q.getEncoded()), scan.Q)
-console.log("recipient d before hex conversion:", recipient.d)
-console.log("recipient d after hex conversion:", recipient.d.toHex())
-console.log("recipient d retrieved", bigi.fromHex(recipient.d.toHex()))
-//create the address for the receiver the check later, then the forrecipient will try to generate and check if its the same address
+var forScanner = stealthDualScan(scan.d, recipient.Q, nonce.Q)
 
+var forRecipient = stealthDualReceive(scan.d, recipient.d, nonce.Q)
 
-//assert.throws(function () { forSender.toWIF() }, /Error: Missing private key/)
-
-// ... sender reveals nonce public key (nonce.Q) to scanner
-var forScanner = stealthDualScan(scan.d, recipient.Q, recipient.Q)
-//assert.throws(function () { forScanner.toWIF() }, /Error: Missing private key/)
-
-// ... scanner reveals relevant transaction + nonce public key (nonce.Q) to recipient
-
-var forRecipient = stealthDualReceive(scan.d, recipient.d, recipient.Q)
 if (forSender.getAddress()===forRecipient.getAddress()) {
   console.log("Use this private key for the money", forRecipient.toWIF());
 }
