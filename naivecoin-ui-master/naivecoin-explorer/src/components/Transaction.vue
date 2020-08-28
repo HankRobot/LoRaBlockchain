@@ -8,7 +8,9 @@
       <div class="row bold" v-if="txIn.signaturestring ===''">Coinbase transaction</div>
       <div class="row">TxOutId: <router-link :to="{ name: 'Transaction', params: {id: txIn.txOutId }}"> <span>{{ txIn.txOutId }}</span></router-link></div>
       <div class="row">TxOutIndex:  {{ txIn.txOutIndex }}</div>
-      <div class="row">Signature: {{ txIn.signaturestring }}</div>
+      <div class="row">Signature String: {{ txIn.signaturestring }}</div>
+      <button v-on:click="isHidden = !isHidden">Show full Signature</button>
+      <div v-if="!isHidden" class="row">Signature: {{ txIn.signature }}</div>
     </div>
     <h5>TxOuts</h5>
     <div class="txIn break-word" v-for="txOut in transaction.txOuts">
@@ -21,11 +23,13 @@
   </div>
 </template>
 
+
 <script>
   export default {
     name: 'Transaction',
     data() {
       return {
+        isHidden: false,
         transaction :{}
       }
     },
