@@ -233,13 +233,8 @@ const validateTxIn = (txIn: TxIn, transaction: Transaction, aUnspentTxOuts: Unsp
     const foreign_keys = getRingPublicFromWallet();
     //const signature = key.sign(transaction.id,foreign_keys);
     const signature:Signature = txIn.signature;
-    const validSignature: boolean = signature.verify(transaction.id,signature.public_keys)// && signature.getc_summation() == txIn.signaturestring ;
-    
-    //const validSignature: boolean = txIn.signature.verify(transaction.id,txIn.signature.public_keys)
-    //const key = ec.keyFromPublic(address, 'hex');
-    //const validSignature: boolean = key.verify(transaction.id, txIn.signature);
-    //const validSignature: boolean = true;//txIn.signature.verify(transaction.id,txIn.signature.public_keys);
-    //txIn.signature = null;
+    const validSignature: boolean = signature.verify(transaction.id,signature.public_keys)
+
     if (!validSignature) {
         console.log('invalid txIn signature: %s txId: %s address: %s', txIn.signature, transaction.id, referencedUTxOut.stealthaddress);
         return false;
