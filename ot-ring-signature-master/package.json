@@ -21,7 +21,7 @@
   "dependencies": {
     "bn.js": "^4.11.8",
     "crypto-random-int": "^1.0.1",
-    "elliptic": "^6.4.0",
+    "elliptic": "^6.5.4",
     "ethereumjs-util": "^5.1.3",
     "flatted": "^3.0.4",
     "keccak": "^1.4.0",
