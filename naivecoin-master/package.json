@@ -25,7 +25,7 @@
     "express": "^4.17.1",
     "flatted": "^3.0.4",
     "keccak": "^1.4.0",
-    "lodash": "^4.17.19",
+    "lodash": "^4.17.21",
     "python-shell": "^2.0.1",
     "rimraf": "^2.6.2",
     "ring-crypto": "^1.0.8",
