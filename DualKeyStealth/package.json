@@ -20,7 +20,7 @@
     "crypto-random-int": "^1.0.1",
     "elliptic": "^6.4.0",
     "ethereumjs-util": "^5.1.3",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "flatted": "^3.0.4",
     "keccak": "^1.4.0",
     "lodash": "^4.17.19",
